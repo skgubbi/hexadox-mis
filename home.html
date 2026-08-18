@@ -37,6 +37,8 @@
 
     </style>
 
+    <link rel="stylesheet" href="theme-yellow.css">
+
 </head>
 
 
@@ -166,16 +168,115 @@
 
 async function checkSession() {
 
-    const result =
-        await requireLogin();
+    console.log(
+        "Checking Supabase session..."
+    );
 
-    if (!result) {
-        return;
-    }
 
     const {
+        data,
+        error
+    } =
+        await client.auth.getSession();
+
+
+    console.log(
+        "SESSION:",
+        data
+    );
+
+
+    console.log(
+        "SESSION ERROR:",
+        error
+    );
+
+
+    // ==========================================
+    // NO SESSION
+    // ==========================================
+
+    if (
+        error ||
+        !data.session
+    ) {
+
+        window.location.href =
+            "index.html";
+
+        return;
+
+    }
+
+
+    const userId =
+        data.session.user.id;
+
+
+    // ==========================================
+    // LOAD USER PROFILE
+    // ==========================================
+
+    const {
+        data: profile,
+        error: profileError
+    } =
+        await client
+            .from("user_profiles")
+            .select(
+                "id, full_name, role, active"
+            )
+            .eq(
+                "id",
+                userId
+            )
+            .single();
+
+
+    console.log(
+        "PROFILE:",
         profile
-    } = result;
+    );
+
+
+    console.log(
+        "PROFILE ERROR:",
+        profileError
+    );
+
+
+    if (
+        profileError ||
+        !profile
+    ) {
+
+        document.getElementById(
+            "loading"
+        ).innerHTML =
+            "User profile could not be loaded.";
+
+        return;
+
+    }
+
+
+    // ==========================================
+    // CHECK ACTIVE
+    // ==========================================
+
+    if (
+        profile.active !== true
+    ) {
+
+        await client.auth.signOut();
+
+        window.location.href =
+            "index.html";
+
+        return;
+
+    }
+
 
     // ==========================================
     // LOAD USER HQ MAPPING
@@ -187,26 +288,36 @@ async function checkSession() {
     } =
         await client
             .from("user_hq_mapping")
-            .select("hq_id")
+            .select(
+                "hq_id"
+            )
             .eq(
                 "user_id",
-                profile.id
+                userId
             )
             .limit(1)
             .maybeSingle();
+
 
     console.log(
         "HQ MAPPING:",
         mapping
     );
 
+
     console.log(
         "HQ MAPPING ERROR:",
         mappingError
     );
 
+
     let hqName =
         "HQ not assigned";
+
+
+    // ==========================================
+    // LOAD HQ
+    // ==========================================
 
     if (
         mapping &&
@@ -219,31 +330,56 @@ async function checkSession() {
         } =
             await client
                 .from("hqs")
-                .select("hq_name")
+                .select(
+                    "hq_name"
+                )
                 .eq(
                     "id",
                     mapping.hq_id
                 )
                 .single();
 
+
+        console.log(
+            "HQ:",
+            hq
+        );
+
+
+        console.log(
+            "HQ ERROR:",
+            hqError
+        );
+
+
         if (
             !hqError &&
             hq
         ) {
+
             hqName =
                 hq.hq_name;
+
         }
+
     }
+
+
+    // ==========================================
+    // DISPLAY USER INFORMATION
+    // ==========================================
 
     document.getElementById(
         "loading"
     ).style.display =
         "none";
 
+
     document.getElementById(
         "userInfo"
     ).style.display =
         "block";
+
 
     document.getElementById(
         "welcome"
@@ -253,6 +389,7 @@ async function checkSession() {
             profile.full_name
         );
 
+
     document.getElementById(
         "userRole"
     ).innerHTML =
@@ -260,6 +397,7 @@ async function checkSession() {
         escapeHTML(
             profile.role || ""
         );
+
 
     document.getElementById(
         "userHQ"
@@ -269,24 +407,25 @@ async function checkSession() {
             hqName
         );
 
+
     // ==========================================
     // MASTER DATA — ADMIN ONLY
     // ==========================================
 
-    const masterButton =
-        document.getElementById(
-            "masterDataButton"
-        );
-
     if (
-        masterButton &&
         profile.role === "Admin"
     ) {
-        masterButton.style.display =
+
+        document.getElementById(
+            "masterDataButton"
+        ).style.display =
             "block";
+
     }
 
 }
+
+
 
 // ======================================================
 // LOGOUT

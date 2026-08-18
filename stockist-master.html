@@ -198,6 +198,8 @@
 
     </style>
 
+    <link rel="stylesheet" href="theme-yellow.css">
+
 </head>
 
 
@@ -323,17 +325,32 @@
 
 async function initializePage() {
 
-    const result =
-        await requireAdmin();
+    const { data, error } =
+        await client.auth.getSession();
 
-    if (!result) {
+
+    console.log("SESSION:", data);
+
+    console.log("SESSION ERROR:", error);
+
+
+    if (error || !data.session) {
+
+        window.location.href =
+            "index.html";
+
         return;
+
     }
 
+
     await loadHQs();
+
     await loadStockists();
 
 }
+
+
 
 // ======================================================
 // LOAD HQs

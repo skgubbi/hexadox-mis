@@ -1,0 +1,169 @@
+/* =========================================================
+   HEXADOX MIS — YELLOW THEME
+   ========================================================= */
+
+:root {
+    --hx-yellow: #F2C300;
+    --hx-yellow-dark: #C99F00;
+    --hx-yellow-soft: #FFF7CC;
+    --hx-yellow-pale: #FFFBEA;
+    --hx-charcoal: #252525;
+    --hx-text: #222222;
+    --hx-muted: #666666;
+    --hx-border: #D8D8D8;
+    --hx-white: #FFFFFF;
+    --hx-bg: #F7F7F4;
+}
+
+/* Page */
+body {
+    background: var(--hx-bg) !important;
+    color: var(--hx-text) !important;
+}
+
+/* Main headers */
+.header {
+    background: var(--hx-yellow) !important;
+    color: var(--hx-charcoal) !important;
+}
+
+.header h2 {
+    color: var(--hx-charcoal) !important;
+}
+
+/* Login */
+.login-box {
+    border-top: 6px solid var(--hx-yellow) !important;
+}
+
+h1 {
+    color: var(--hx-charcoal) !important;
+}
+
+input:focus,
+select:focus {
+    border-color: var(--hx-yellow-dark) !important;
+}
+
+/* Buttons */
+button,
+.save-button,
+.submit-button,
+.search-button {
+    background: var(--hx-yellow) !important;
+    color: var(--hx-charcoal) !important;
+}
+
+button:hover,
+.save-button:hover,
+.submit-button:hover,
+.search-button:hover {
+    background: var(--hx-yellow-dark) !important;
+    color: var(--hx-white) !important;
+}
+
+button:disabled,
+.save-button:disabled,
+.submit-button:disabled,
+.search-button:disabled {
+    background: #999 !important;
+    color: var(--hx-white) !important;
+}
+
+/* Back buttons */
+.back-button {
+    background: var(--hx-white) !important;
+    color: var(--hx-charcoal) !important;
+    border: 1px solid rgba(0,0,0,0.12) !important;
+}
+
+.back-button:hover {
+    background: var(--hx-yellow-soft) !important;
+    color: var(--hx-charcoal) !important;
+}
+
+/* Cards */
+.card,
+.menu-card,
+.login-box {
+    background: var(--hx-white) !important;
+}
+
+/* Section headings */
+.card h3,
+.menu-card h3,
+.welcome h3 {
+    color: var(--hx-charcoal) !important;
+}
+
+/* Master-data menu cards */
+.menu-card:hover {
+    box-shadow: 0 6px 18px rgba(0,0,0,0.13) !important;
+    border-color: var(--hx-yellow) !important;
+}
+
+/* Tables */
+th {
+    background: var(--hx-charcoal) !important;
+    color: var(--hx-white) !important;
+}
+
+.totals-row {
+    background: var(--hx-yellow-pale) !important;
+}
+
+/* Inputs/selects */
+input,
+select {
+    border-color: var(--hx-border) !important;
+}
+
+select:disabled {
+    background: #EEEEEE !important;
+}
+
+/* Informational box */
+.info {
+    background: var(--hx-yellow-soft) !important;
+    border-left: 4px solid var(--hx-yellow) !important;
+}
+
+/* Loading */
+.loading {
+    color: var(--hx-yellow-dark) !important;
+}
+
+/* Statuses remain semantically coloured */
+.status-active {
+    color: #2E7D32 !important;
+}
+
+.status-inactive {
+    color: #A61B1B !important;
+}
+
+/* Success/error messages */
+.success {
+    background: #E8F5E9 !important;
+    color: #256029 !important;
+}
+
+.error {
+    background: #FDECEC !important;
+    color: #9B1C1C !important;
+}
+
+/* Home user information */
+.user-name {
+    color: var(--hx-charcoal) !important;
+}
+
+.user-role,
+.user-hq {
+    color: var(--hx-muted) !important;
+}
+
+/* Footer */
+.footer {
+    color: #777 !important;
+}
