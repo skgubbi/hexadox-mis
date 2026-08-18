@@ -1,494 +1,136 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
-    <meta charset="UTF-8">
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
-    <title>Hexadox MIS</title>
-
-    <link rel="stylesheet" href="style.css">
-
-    <style>
-
-        .user-info {
-            margin: 15px 0 25px 0;
-            line-height: 1.6;
-        }
-
-        .user-name {
-            font-size: 20px;
-            font-weight: bold;
-        }
-
-        .user-role,
-        .user-hq {
-            font-size: 15px;
-            color: #555;
-        }
-
-        #loading {
-            text-align: center;
-            font-weight: bold;
-        }
-
-    </style>
-
-    <link rel="stylesheet" href="theme-yellow.css">
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hexadox MIS</title>
+<link rel="stylesheet" href="style.css">
+<style>
+.user-info{margin:15px 0 25px 0;line-height:1.6}
+.user-name{font-size:20px;font-weight:bold}
+.user-role,.user-hq{font-size:15px;color:#555}
+#loading{text-align:center;font-weight:bold}
+</style>
 </head>
-
-
 <body>
-
-
 <div class="menu-box">
+<h2>HEXADOX MIS</h2>
 
+<div id="loading">Checking Login...</div>
 
-    <h2>HEXADOX MIS</h2>
-
-
-    <!-- ==========================================
-         LOGIN CHECK
-    ========================================== -->
-
-    <div id="loading">
-        Checking Login...
-    </div>
-
-
-    <!-- ==========================================
-         USER INFORMATION
-    ========================================== -->
-
-    <div
-        id="userInfo"
-        class="user-info"
-        style="display:none;"
-    >
-
-        <div
-            id="welcome"
-            class="user-name"
-        >
-        </div>
-
-
-        <div
-            id="userRole"
-            class="user-role"
-        >
-        </div>
-
-
-        <div
-            id="userHQ"
-            class="user-hq"
-        >
-        </div>
-
-    </div>
-
-
-    <!-- ==========================================
-         DATA ENTRY
-    ========================================== -->
-
-    <button
-        onclick="window.location.href='data-entry.html'"
-    >
-        DATA ENTRY
-    </button>
-
-
-    <!-- ==========================================
-         SUBMITTED DATA
-    ========================================== -->
-
-    <button
-        onclick="window.location.href='submitted-data.html'"
-    >
-        SUBMITTED DATA
-    </button>
-
-
-    <!-- ==========================================
-         MASTER DATA
-         ADMIN ONLY
-    ========================================== -->
-
-    <button
-        id="masterDataButton"
-        onclick="window.location.href='master-data.html'"
-        style="display:none;"
-    >
-        MASTER DATA
-    </button>
-
-
-    <!-- ==========================================
-         LOGOUT
-    ========================================== -->
-
-    <button
-        onclick="logout()"
-    >
-        LOGOUT
-    </button>
-
-
+<div id="userInfo" class="user-info" style="display:none;">
+<div id="welcome" class="user-name"></div>
+<div id="userRole" class="user-role"></div>
+<div id="userHQ" class="user-hq"></div>
 </div>
 
+<button onclick="window.location.href='data-entry.html'">DATA ENTRY</button>
+<button onclick="window.location.href='submitted-data.html'">SUBMITTED DATA</button>
 
+<!-- TARGET SHEET — ADMIN / ABM -->
+<button id="targetButton"
+        onclick="window.location.href='target.html'"
+        style="display:none;">
+    TARGET SHEET
+</button>
 
-<!-- ==========================================
-     SUPABASE LIBRARY
-========================================== -->
+<!-- MASTER DATA — ADMIN ONLY -->
+<button id="masterDataButton"
+        onclick="window.location.href='master-data.html'"
+        style="display:none;">
+    MASTER DATA
+</button>
+
+<button onclick="logout()">LOGOUT</button>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-
-<!-- ==========================================
-     SUPABASE CONFIGURATION
-========================================== -->
-
 <script src="app.js"></script>
 
-
-
 <script>
-
-
-// ======================================================
-// CHECK SESSION
-// ======================================================
-
 async function checkSession() {
+    const { data, error } = await client.auth.getSession();
 
-    console.log(
-        "Checking Supabase session..."
-    );
-
-
-    const {
-        data,
-        error
-    } =
-        await client.auth.getSession();
-
-
-    console.log(
-        "SESSION:",
-        data
-    );
-
-
-    console.log(
-        "SESSION ERROR:",
-        error
-    );
-
-
-    // ==========================================
-    // NO SESSION
-    // ==========================================
-
-    if (
-        error ||
-        !data.session
-    ) {
-
-        window.location.href =
-            "index.html";
-
+    if (error || !data.session) {
+        window.location.href = "index.html";
         return;
-
     }
 
+    const userId = data.session.user.id;
 
-    const userId =
-        data.session.user.id;
-
-
-    // ==========================================
-    // LOAD USER PROFILE
-    // ==========================================
-
-    const {
-        data: profile,
-        error: profileError
-    } =
+    const { data: profile, error: profileError } =
         await client
             .from("user_profiles")
-            .select(
-                "id, full_name, role, active"
-            )
-            .eq(
-                "id",
-                userId
-            )
+            .select("id, full_name, role, active")
+            .eq("id", userId)
             .single();
 
-
-    console.log(
-        "PROFILE:",
-        profile
-    );
-
-
-    console.log(
-        "PROFILE ERROR:",
-        profileError
-    );
-
-
-    if (
-        profileError ||
-        !profile
-    ) {
-
-        document.getElementById(
-            "loading"
-        ).innerHTML =
+    if (profileError || !profile) {
+        document.getElementById("loading").innerHTML =
             "User profile could not be loaded.";
-
         return;
-
     }
 
-
-    // ==========================================
-    // CHECK ACTIVE
-    // ==========================================
-
-    if (
-        profile.active !== true
-    ) {
-
+    if (profile.active !== true) {
         await client.auth.signOut();
-
-        window.location.href =
-            "index.html";
-
+        window.location.href = "index.html";
         return;
-
     }
 
-
-    // ==========================================
-    // LOAD USER HQ MAPPING
-    // ==========================================
-
-    const {
-        data: mapping,
-        error: mappingError
-    } =
+    const { data: mapping } =
         await client
             .from("user_hq_mapping")
-            .select(
-                "hq_id"
-            )
-            .eq(
-                "user_id",
-                userId
-            )
+            .select("hq_id")
+            .eq("user_id", userId)
             .limit(1)
             .maybeSingle();
 
+    let hqName = "HQ not assigned";
 
-    console.log(
-        "HQ MAPPING:",
-        mapping
-    );
-
-
-    console.log(
-        "HQ MAPPING ERROR:",
-        mappingError
-    );
-
-
-    let hqName =
-        "HQ not assigned";
-
-
-    // ==========================================
-    // LOAD HQ
-    // ==========================================
-
-    if (
-        mapping &&
-        mapping.hq_id
-    ) {
-
-        const {
-            data: hq,
-            error: hqError
-        } =
+    if (mapping && mapping.hq_id) {
+        const { data: hq } =
             await client
                 .from("hqs")
-                .select(
-                    "hq_name"
-                )
-                .eq(
-                    "id",
-                    mapping.hq_id
-                )
+                .select("hq_name")
+                .eq("id", mapping.hq_id)
                 .single();
 
-
-        console.log(
-            "HQ:",
-            hq
-        );
-
-
-        console.log(
-            "HQ ERROR:",
-            hqError
-        );
-
-
-        if (
-            !hqError &&
-            hq
-        ) {
-
-            hqName =
-                hq.hq_name;
-
-        }
-
+        if (hq) hqName = hq.hq_name;
     }
 
+    document.getElementById("loading").style.display = "none";
+    document.getElementById("userInfo").style.display = "block";
 
-    // ==========================================
-    // DISPLAY USER INFORMATION
-    // ==========================================
+    document.getElementById("welcome").innerHTML =
+        "Welcome, " + escapeHTML(profile.full_name);
 
-    document.getElementById(
-        "loading"
-    ).style.display =
-        "none";
+    document.getElementById("userRole").innerHTML =
+        "Role: " + escapeHTML(profile.role || "");
 
+    document.getElementById("userHQ").innerHTML =
+        "HQ: " + escapeHTML(hqName);
 
-    document.getElementById(
-        "userInfo"
-    ).style.display =
-        "block";
-
-
-    document.getElementById(
-        "welcome"
-    ).innerHTML =
-        "Welcome, " +
-        escapeHTML(
-            profile.full_name
-        );
-
-
-    document.getElementById(
-        "userRole"
-    ).innerHTML =
-        "Role: " +
-        escapeHTML(
-            profile.role || ""
-        );
-
-
-    document.getElementById(
-        "userHQ"
-    ).innerHTML =
-        "HQ: " +
-        escapeHTML(
-            hqName
-        );
-
-
-    // ==========================================
-    // MASTER DATA — ADMIN ONLY
-    // ==========================================
-
-    if (
-        profile.role === "Admin"
-    ) {
-
-        document.getElementById(
-            "masterDataButton"
-        ).style.display =
-            "block";
-
+    if (profile.role === "Admin" || profile.role === "ABM") {
+        document.getElementById("targetButton").style.display = "block";
     }
 
+    if (profile.role === "Admin") {
+        document.getElementById("masterDataButton").style.display = "block";
+    }
 }
-
-
-
-// ======================================================
-// LOGOUT
-// ======================================================
 
 async function logout() {
-
-    console.log(
-        "Logging out..."
-    );
-
-
-    const {
-        error
-    } =
-        await client.auth.signOut();
-
-
-    console.log(
-        "LOGOUT ERROR:",
-        error
-    );
-
-
-    window.location.href =
-        "index.html";
-
+    await client.auth.signOut();
+    window.location.href = "index.html";
 }
-
-
-
-// ======================================================
-// ESCAPE HTML
-// ======================================================
 
 function escapeHTML(text) {
-
-    const div =
-        document.createElement(
-            "div"
-        );
-
-
-    div.textContent =
-        text || "";
-
-
+    const div = document.createElement("div");
+    div.textContent = text || "";
     return div.innerHTML;
-
 }
 
-
-
-// ======================================================
-// START
-// ======================================================
-
 checkSession();
-
-
 </script>
-
-
 </body>
-
 </html>

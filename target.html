@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hexadox MIS - Target Sheet</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f4f6f6;color:#222}
+.header{background:#008f87;color:white;padding:18px 25px;display:flex;justify-content:space-between;align-items:center}
+.header h2{margin:0;font-size:22px}
+.back-button{background:white;color:#008f87;border:none;padding:9px 16px;border-radius:5px;cursor:pointer;font-weight:bold}
+.container{max-width:1200px;margin:25px auto;padding:0 15px}
+.card{background:white;padding:22px;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.08);margin-bottom:20px}
+.card h3{margin-top:0;color:#008f87}
+.selection-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+label{display:block;font-weight:bold;margin-bottom:7px}
+select,input{width:100%;padding:10px;border:1px solid #ccc;border-radius:5px;font-size:15px}
+.table-container{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:760px}
+th{background:#008f87;color:white;padding:11px 8px;text-align:center}
+td{padding:8px;border-bottom:1px solid #ddd;text-align:center}
+td.product-name{text-align:left;font-weight:500}
+td input{width:120px;text-align:right}
+.value-cell{font-weight:bold;text-align:right;white-space:nowrap}
+.totals-row{font-weight:bold;background:#f1f5f5}
+.submit-area{text-align:center;margin-top:25px}
+.submit-button{background:#008f87;color:white;border:none;padding:13px 40px;border-radius:6px;font-size:16px;font-weight:bold;cursor:pointer}
+.submit-button:hover{background:#00756f}
+.submit-button:disabled{background:#999;cursor:not-allowed}
+.message{margin-top:15px;padding:12px;border-radius:5px;display:none;text-align:center;font-weight:bold}
+.success{background:#d9f5e9;color:#146c43}
+.error{background:#f8d7da;color:#842029}
+.loading{text-align:center;padding:20px;font-weight:bold;color:#008f87}
+.info{background:#eef8f7;padding:12px;border-radius:5px;margin-bottom:18px;color:#555;font-size:14px}
+@media(max-width:700px){.selection-grid{grid-template-columns:1fr}.header{padding:15px}.header h2{font-size:18px}}
+</style>
+</head>
+<body>
+
+<div class="header">
+    <h2>HEXADOX MIS — TARGET SHEET</h2>
+    <button class="back-button" onclick="goHome()">HOME</button>
+</div>
+
+<div class="container">
+
+    <div class="card">
+        <h3>Target Details</h3>
+        <div class="info">
+            Select the month, year and HQ. Enter PTS and Units for each product.
+            Target Value is calculated automatically as <strong>PTS × Units</strong>.
+            Existing targets for the selected HQ and month will be loaded for editing.
+        </div>
+
+        <div class="selection-grid">
+            <div>
+                <label for="month">Month</label>
+                <select id="month">
+                    <option value="">Select Month</option>
+                    <option value="1">January</option>
+                    <option value="2">February</option>
+                    <option value="3">March</option>
+                    <option value="4">April</option>
+                    <option value="5">May</option>
+                    <option value="6">June</option>
+                    <option value="7">July</option>
+                    <option value="8">August</option>
+                    <option value="9">September</option>
+                    <option value="10">October</option>
+                    <option value="11">November</option>
+                    <option value="12">December</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="year">Year</label>
+                <select id="year">
+                    <option value="">Select Year</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="hq">HQ</label>
+                <select id="hq">
+                    <option value="">Loading HQ...</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>Product Targets</h3>
+        <div id="productArea">
+            <div class="loading">Select Month, Year and HQ</div>
+        </div>
+
+        <div class="submit-area">
+            <button id="saveButton" class="submit-button" onclick="saveTargets()">
+                SAVE TARGETS
+            </button>
+        </div>
+    </div>
+
+    <div id="message" class="message"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
+
+<script>
+let products = [];
+let currentUser = null;
+let currentRole = null;
+
+async function initializePage() {
+    const { data, error } = await client.auth.getSession();
+
+    if (error || !data.session) {
+        window.location.href = "index.html";
+        return;
+    }
+
+    currentUser = data.session.user;
+
+    const { data: profile, error: profileError } = await client
+        .from("user_profiles")
+        .select("id, full_name, role, active")
+        .eq("id", currentUser.id)
+        .single();
+
+    if (profileError || !profile || profile.active !== true) {
+        await client.auth.signOut();
+        window.location.href = "index.html";
+        return;
+    }
+
+    currentRole = profile.role;
+
+    // Target entry is available to Admin and ABM.
+    if (currentRole !== "Admin" && currentRole !== "ABM") {
+        document.body.innerHTML =
+            '<div style="padding:40px;text-align:center;font-family:Arial">' +
+            '<h2>Access Denied</h2>' +
+            '<p>You do not have permission to enter targets.</p>' +
+            '<button onclick="goHome()">HOME</button>' +
+            '</div>';
+        return;
+    }
+
+    loadYears();
+
+    const today = new Date();
+    document.getElementById("month").value = today.getMonth() + 1;
+    document.getElementById("year").value = today.getFullYear();
+
+    await loadHQs();
+}
+
+function loadYears() {
+    const yearSelect = document.getElementById("year");
+    const currentYear = new Date().getFullYear();
+
+    for (let year = currentYear - 2; year <= currentYear + 1; year++) {
+        const option = document.createElement("option");
+        option.value = year;
+        option.textContent = year;
+        yearSelect.appendChild(option);
+    }
+}
+
+async function loadHQs() {
+    const hqSelect = document.getElementById("hq");
+
+    hqSelect.innerHTML = '<option value="">Loading HQ...</option>';
+
+    const { data: hqs, error } = await client
+        .from("hqs")
+        .select("id, hq_name")
+        .eq("active", true)
+        .order("hq_name");
+
+    if (error) {
+        showMessage("Unable to load HQs: " + error.message, "error");
+        return;
+    }
+
+    hqSelect.innerHTML = '<option value="">Select HQ</option>';
+
+    (hqs || []).forEach(hq => {
+        const option = document.createElement("option");
+        option.value = hq.id;
+        option.textContent = hq.hq_name;
+        hqSelect.appendChild(option);
+    });
+}
+
+document.getElementById("month").addEventListener("change", loadTargetsForSelection);
+document.getElementById("year").addEventListener("change", loadTargetsForSelection);
+document.getElementById("hq").addEventListener("change", loadTargetsForSelection);
+
+async function loadTargetsForSelection() {
+    const month = parseInt(document.getElementById("month").value);
+    const year = parseInt(document.getElementById("year").value);
+    const hqId = document.getElementById("hq").value;
+
+    if (!month || !year || !hqId) {
+        document.getElementById("productArea").innerHTML =
+            '<div class="loading">Select Month, Year and HQ</div>';
+        return;
+    }
+
+    await loadProducts(month, year, hqId);
+}
+
+async function loadProducts(month, year, hqId) {
+    const productArea = document.getElementById("productArea");
+    productArea.innerHTML = '<div class="loading">Loading products...</div>';
+
+    const { data: productData, error: productError } = await client
+        .from("products")
+        .select("id, product_name")
+        .eq("active", true)
+        .order("product_name");
+
+    if (productError) {
+        showMessage("Unable to load products: " + productError.message, "error");
+        return;
+    }
+
+    products = productData || [];
+
+    const { data: targets, error: targetError } = await client
+        .from("targets")
+        .select("product_id, target_pts, target_units, target_value")
+        .eq("month", month)
+        .eq("year", year)
+        .eq("hq_id", hqId);
+
+    if (targetError) {
+        showMessage("Unable to load existing targets: " + targetError.message, "error");
+        return;
+    }
+
+    const targetMap = {};
+    (targets || []).forEach(row => {
+        targetMap[row.product_id] = row;
+    });
+
+    renderProductTable(targetMap);
+}
+
+function renderProductTable(targetMap) {
+    const productArea = document.getElementById("productArea");
+
+    if (products.length === 0) {
+        productArea.innerHTML =
+            '<div class="loading">No active products found.</div>';
+        return;
+    }
+
+    let html = `
+        <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Product</th>
+                    <th>PTS</th>
+                    <th>Target Units</th>
+                    <th>Target Value</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    products.forEach((product, index) => {
+        const target = targetMap[product.id] || {};
+        const pts = target.target_pts ?? "";
+        const units = target.target_units ?? "";
+        const value = target.target_value ?? 0;
+
+        html += `
+            <tr>
+                <td>${index + 1}</td>
+                <td class="product-name">${escapeHTML(product.product_name)}</td>
+                <td>
+                    <input
+                        type="number"
+                        class="pts"
+                        data-product="${product.id}"
+                        min="0"
+                        step="0.01"
+                        value="${pts}"
+                        placeholder="PTS"
+                        oninput="calculateRow('${product.id}')"
+                    >
+                </td>
+                <td>
+                    <input
+                        type="number"
+                        class="units"
+                        data-product="${product.id}"
+                        min="0"
+                        step="1"
+                        value="${units}"
+                        placeholder="0"
+                        oninput="calculateRow('${product.id}')"
+                    >
+                </td>
+                <td
+                    class="value-cell"
+                    id="target-value-${product.id}">
+                    ${Number(value).toFixed(2)}
+                </td>
+            </tr>
+        `;
+    });
+
+    html += `
+            <tr class="totals-row">
+                <td colspan="4">TOTAL TARGET VALUE</td>
+                <td id="total-target-value">0.00</td>
+            </tr>
+            </tbody>
+        </table>
+        </div>
+    `;
+
+    productArea.innerHTML = html;
+    calculateTotals();
+}
+
+function calculateRow(productId) {
+    const ptsInput = document.querySelector(
+        `.pts[data-product="${productId}"]`
+    );
+    const unitsInput = document.querySelector(
+        `.units[data-product="${productId}"]`
+    );
+
+    const pts = parseFloat(ptsInput.value) || 0;
+    const units = parseInt(unitsInput.value) || 0;
+    const value = pts * units;
+
+    document.getElementById(
+        `target-value-${productId}`
+    ).textContent = value.toFixed(2);
+
+    calculateTotals();
+}
+
+function calculateTotals() {
+    let total = 0;
+
+    products.forEach(product => {
+        const ptsInput = document.querySelector(
+            `.pts[data-product="${product.id}"]`
+        );
+        const unitsInput = document.querySelector(
+            `.units[data-product="${product.id}"]`
+        );
+
+        if (!ptsInput || !unitsInput) return;
+
+        const pts = parseFloat(ptsInput.value) || 0;
+        const units = parseInt(unitsInput.value) || 0;
+
+        total += pts * units;
+    });
+
+    const totalCell = document.getElementById("total-target-value");
+    if (totalCell) totalCell.textContent = total.toFixed(2);
+}
+
+async function saveTargets() {
+    const month = parseInt(document.getElementById("month").value);
+    const year = parseInt(document.getElementById("year").value);
+    const hqId = document.getElementById("hq").value;
+
+    if (!month || !year || !hqId) {
+        showMessage("Please select Month, Year and HQ.", "error");
+        return;
+    }
+
+    if (products.length === 0) {
+        showMessage("No products available.", "error");
+        return;
+    }
+
+    const button = document.getElementById("saveButton");
+    button.disabled = true;
+    button.textContent = "SAVING...";
+
+    const rows = [];
+
+    for (const product of products) {
+        const ptsInput = document.querySelector(
+            `.pts[data-product="${product.id}"]`
+        );
+        const unitsInput = document.querySelector(
+            `.units[data-product="${product.id}"]`
+        );
+
+        const ptsText = ptsInput.value.trim();
+        const unitsText = unitsInput.value.trim();
+
+        // Completely blank row = no target for that product.
+        if (ptsText === "" && unitsText === "") continue;
+
+        if (ptsText === "" || unitsText === "") {
+            showMessage(
+                `Enter both PTS and Units for ${product.product_name}.`,
+                "error"
+            );
+            button.disabled = false;
+            button.textContent = "SAVE TARGETS";
+            ptsInput.focus();
+            return;
+        }
+
+        const pts = parseFloat(ptsText);
+        const units = parseInt(unitsText);
+
+        if (!Number.isFinite(pts) || pts < 0) {
+            showMessage(
+                `Invalid PTS for ${product.product_name}.`,
+                "error"
+            );
+            button.disabled = false;
+            button.textContent = "SAVE TARGETS";
+            ptsInput.focus();
+            return;
+        }
+
+        if (!Number.isInteger(units) || units < 0) {
+            showMessage(
+                `Invalid Units for ${product.product_name}.`,
+                "error"
+            );
+            button.disabled = false;
+            button.textContent = "SAVE TARGETS";
+            unitsInput.focus();
+            return;
+        }
+
+        rows.push({
+            month: month,
+            year: year,
+            hq_id: hqId,
+            product_id: product.id,
+            target_pts: pts,
+            target_units: units
+        });
+    }
+
+    // Remove old targets for this HQ/month, then insert the current sheet.
+    // The database unique constraint protects against duplicates.
+    const { error: deleteError } = await client
+        .from("targets")
+        .delete()
+        .eq("month", month)
+        .eq("year", year)
+        .eq("hq_id", hqId);
+
+    if (deleteError) {
+        showMessage(
+            "Unable to update targets: " + deleteError.message,
+            "error"
+        );
+        button.disabled = false;
+        button.textContent = "SAVE TARGETS";
+        return;
+    }
+
+    if (rows.length > 0) {
+        const { error: insertError } = await client
+            .from("targets")
+            .insert(rows);
+
+        if (insertError) {
+            showMessage(
+                "Unable to save targets: " + insertError.message,
+                "error"
+            );
+            button.disabled = false;
+            button.textContent = "SAVE TARGETS";
+            return;
+        }
+    }
+
+    showMessage(
+        "Targets saved successfully.",
+        "success"
+    );
+
+    button.disabled = false;
+    button.textContent = "SAVE TARGETS";
+
+    await loadProducts(month, year, hqId);
+}
+
+function showMessage(text, type) {
+    const message = document.getElementById("message");
+    message.textContent = text;
+    message.className = "message " + type;
+    message.style.display = "block";
+}
+
+function escapeHTML(text) {
+    const div = document.createElement("div");
+    div.textContent = text || "";
+    return div.innerHTML;
+}
+
+function goHome() {
+    window.location.href = "home.html";
+}
+
+initializePage();
+</script>
+
+</body>
+</html>
