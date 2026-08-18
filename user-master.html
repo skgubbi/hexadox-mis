@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
+
+<title>Hexadox MIS - User Management</title>
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f4f6f6;
+    color: #222;
+}
+
+.header {
+    background: #008f87;
+    color: white;
+    padding: 18px 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header h2 {
+    margin: 0;
+    font-size: 22px;
+}
+
+.back-button {
+    background: white;
+    color: #008f87;
+    border: none;
+    padding: 9px 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.container {
+    max-width: 1000px;
+    margin: 25px auto;
+    padding: 0 15px;
+}
+
+.card {
+    background: white;
+    padding: 22px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    margin-bottom: 20px;
+}
+
+.card h3 {
+    margin-top: 0;
+    color: #008f87;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+}
+
+.form-group {
+    margin-bottom: 5px;
+}
+
+label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 7px;
+}
+
+input,
+select {
+    width: 100%;
+    padding: 11px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 15px;
+}
+
+.save-area {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.save-button {
+    background: #008f87;
+    color: white;
+    border: none;
+    padding: 12px 40px;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.save-button:disabled {
+    background: #999;
+    cursor: not-allowed;
+}
+
+.message {
+    margin-top: 15px;
+    padding: 12px;
+    border-radius: 5px;
+    display: none;
+    text-align: center;
+    font-weight: bold;
+}
+
+.success {
+    background: #d9f5e9;
+    color: #146c43;
+}
+
+.error {
+    background: #f8d7da;
+    color: #842029;
+}
+
+.loading {
+    text-align: center;
+    padding: 25px;
+    color: #008f87;
+    font-weight: bold;
+}
+
+.info {
+    background: #eef8f7;
+    padding: 12px;
+    border-radius: 5px;
+    margin-bottom: 18px;
+    color: #555;
+    font-size: 14px;
+}
+
+@media (max-width: 700px) {
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .header h2 {
+        font-size: 18px;
+    }
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<div class="header">
+
+    <h2>HEXADOX MIS — USER MANAGEMENT</h2>
+
+    <button
+        class="back-button"
+        onclick="goMasterData()">
+
+        MASTER DATA
+
+    </button>
+
+</div>
+
+
+
+<div class="container">
+
+
+<!-- ==========================================
+     CREATE USER
+========================================== -->
+
+<div class="card">
+
+    <h3>Add New User</h3>
+
+    <div class="info">
+
+        Create a login account for a Hexadox MIS user.
+        The user will log in using the username and
+        password created here.
+
+    </div>
+
+
+    <div class="form-grid">
+
+
+        <!-- FULL NAME -->
+
+        <div class="form-group">
+
+            <label for="fullName">
+                Full Name
+            </label>
+
+            <input
+                type="text"
+                id="fullName"
+                placeholder="Enter full name"
+            >
+
+        </div>
+
+
+        <!-- USERNAME -->
+
+        <div class="form-group">
+
+            <label for="username">
+                Username
+            </label>
+
+            <input
+                type="text"
+                id="username"
+                placeholder="e.g. ravi"
+                autocomplete="off"
+            >
+
+        </div>
+
+
+        <!-- PASSWORD -->
+
+        <div class="form-group">
+
+            <label for="password">
+                Password
+            </label>
+
+            <input
+                type="password"
+                id="password"
+                placeholder="Minimum 6 characters"
+                autocomplete="new-password"
+            >
+
+        </div>
+
+
+        <!-- ROLE -->
+
+        <div class="form-group">
+
+            <label for="role">
+                Role
+            </label>
+
+            <select id="role">
+
+                <option value="">
+                    Select Role
+                </option>
+
+                <option value="Admin">
+                    Admin
+                </option>
+
+                <option value="ABM">
+                    ABM
+                </option>
+
+                <option value="Field Staff">
+                    Field Staff
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- HQ -->
+
+        <div class="form-group">
+
+            <label for="hq">
+                HQ
+            </label>
+
+            <select id="hq">
+
+                <option value="">
+                    Loading HQs...
+                </option>
+
+            </select>
+
+        </div>
+
+
+    </div>
+
+
+    <div class="save-area">
+
+        <button
+            id="createButton"
+            class="save-button"
+            onclick="createUser()">
+
+            CREATE USER
+
+        </button>
+
+    </div>
+
+
+    <div
+        id="message"
+        class="message">
+    </div>
+
+</div>
+
+
+
+<!-- ==========================================
+     USERS
+========================================== -->
+
+<div class="card">
+
+    <h3>Current Users</h3>
+
+    <div id="userArea">
+
+        <div class="loading">
+            Loading users...
+        </div>
+
+    </div>
+
+</div>
+
+
+</div>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="app.js"></script>
+
+
+<script>
+
+
+// ======================================================
+// INITIALIZE
+// ======================================================
+
+async function initializePage() {
+
+    const result =
+        await requireAdmin();
+
+    if (!result) {
+        return;
+    }
+
+    await loadHQs();
+    await loadUsers();
+
+}
+
+// ======================================================
+// LOAD HQs
+// ======================================================
+
+async function loadHQs() {
+
+    const hqSelect =
+        document.getElementById("hq");
+
+
+    const {
+        data: hqs,
+        error
+    } =
+        await client
+            .from("hqs")
+            .select(
+                "id, hq_name"
+            )
+            .eq(
+                "active",
+                true
+            )
+            .order(
+                "hq_name"
+            );
+
+
+    if (error) {
+
+        showMessage(
+            "Unable to load HQs: " +
+            error.message,
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    hqSelect.innerHTML =
+        '<option value="">Select HQ</option>';
+
+
+    hqs.forEach(
+        hq => {
+
+            const option =
+                document.createElement(
+                    "option"
+                );
+
+            option.value =
+                hq.id;
+
+            option.textContent =
+                hq.hq_name;
+
+            hqSelect.appendChild(
+                option
+            );
+
+        }
+    );
+
+}
+
+
+
+// ======================================================
+// CREATE USER
+// ======================================================
+
+async function createUser() {
+
+    const fullName =
+        document
+            .getElementById("fullName")
+            .value
+            .trim();
+
+
+    const username =
+        document
+            .getElementById("username")
+            .value
+            .trim()
+            .toLowerCase();
+
+
+    const password =
+        document
+            .getElementById("password")
+            .value;
+
+
+    const role =
+        document
+            .getElementById("role")
+            .value;
+
+
+    const hqId =
+        document
+            .getElementById("hq")
+            .value;
+
+
+    // ==========================================
+    // VALIDATION
+    // ==========================================
+
+    if (!fullName) {
+
+        showMessage(
+            "Please enter the full name.",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    if (!username) {
+
+        showMessage(
+            "Please enter a username.",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    if (
+        !/^[a-z0-9._-]+$/.test(username)
+    ) {
+
+        showMessage(
+            "Username can contain only letters, numbers, dot, underscore and hyphen.",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    if (password.length < 6) {
+
+        showMessage(
+            "Password must contain at least 6 characters.",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    if (!role) {
+
+        showMessage(
+            "Please select a role.",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    if (!hqId) {
+
+        showMessage(
+            "Please select an HQ.",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    // ==========================================
+    // CONFIRM
+    // ==========================================
+
+    const confirmed =
+        confirm(
+            "Create this user?\n\n" +
+            "Name: " +
+            fullName +
+            "\nUsername: " +
+            username +
+            "\nRole: " +
+            role
+        );
+
+
+    if (!confirmed) {
+
+        return;
+
+    }
+
+
+    const button =
+        document.getElementById(
+            "createButton"
+        );
+
+
+    button.disabled =
+        true;
+
+
+    button.textContent =
+        "CREATING...";
+
+
+    // ==========================================
+    // CALL EDGE FUNCTION
+    // ==========================================
+
+    // ==========================================
+// GET CURRENT SESSION
+// ==========================================
+
+const {
+    data: sessionData,
+    error: sessionError
+} = await client.auth.getSession();
+
+
+if (
+    sessionError ||
+    !sessionData.session
+) {
+
+    showMessage(
+        "Your login session has expired. Please login again.",
+        "error"
+    );
+
+    button.disabled = false;
+    button.textContent = "CREATE USER";
+
+    return;
+
+}
+
+
+const accessToken =
+    sessionData.session.access_token;
+
+
+// ==========================================
+// CALL EDGE FUNCTION
+// ==========================================
+
+const {
+    data,
+    error
+} =
+    await client.functions.invoke(
+        "create-user",
+        {
+
+            headers: {
+
+                Authorization:
+                    "Bearer " +
+                    accessToken
+
+            },
+
+            body: {
+
+                full_name:
+                    fullName,
+
+                username:
+                    username,
+
+                password:
+                    password,
+
+                role:
+                    role,
+
+                hq_id:
+                    hqId
+
+            }
+
+        }
+    );
+
+
+    console.log(
+        "CREATE USER RESPONSE:",
+        data
+    );
+
+
+    console.log(
+        "CREATE USER ERROR:",
+        error
+    );
+
+
+    // ==========================================
+    // ERROR
+    // ==========================================
+
+    if (error) {
+
+        let errorMessage =
+            error.message;
+
+
+        try {
+
+            if (
+                error.context
+            ) {
+
+                const response =
+                    await error.context.json();
+
+                if (
+                    response &&
+                    response.error
+                ) {
+
+                    errorMessage =
+                        response.error;
+
+                }
+
+            }
+
+        } catch (e) {
+
+            console.log(
+                "Could not read function error."
+            );
+
+        }
+
+
+        showMessage(
+            errorMessage,
+            "error"
+        );
+
+
+        button.disabled =
+            false;
+
+
+        button.textContent =
+            "CREATE USER";
+
+
+        return;
+
+    }
+
+
+    // ==========================================
+    // FUNCTION-LEVEL ERROR
+    // ==========================================
+
+    if (
+        !data ||
+        data.success !== true
+    ) {
+
+        showMessage(
+            data?.error ||
+            "User could not be created.",
+            "error"
+        );
+
+
+        button.disabled =
+            false;
+
+
+        button.textContent =
+            "CREATE USER";
+
+
+        return;
+
+    }
+
+
+    // ==========================================
+    // SUCCESS
+    // ==========================================
+
+    showMessage(
+        "User created successfully.",
+        "success"
+    );
+
+
+    document
+        .getElementById("fullName")
+        .value = "";
+
+
+    document
+        .getElementById("username")
+        .value = "";
+
+
+    document
+        .getElementById("password")
+        .value = "";
+
+
+    document
+        .getElementById("role")
+        .value = "";
+
+
+    document
+        .getElementById("hq")
+        .value = "";
+
+
+    button.disabled =
+        false;
+
+
+    button.textContent =
+        "CREATE USER";
+
+
+    await loadUsers();
+
+}
+
+
+
+// ======================================================
+// LOAD USERS
+// ======================================================
+
+async function loadUsers() {
+
+    const userArea =
+        document.getElementById(
+            "userArea"
+        );
+
+
+    const {
+        data: profiles,
+        error
+    } =
+        await client
+            .from("user_profiles")
+            .select(
+                "id, full_name, role, active"
+            )
+            .order(
+                "full_name"
+            );
+
+
+    if (error) {
+
+        userArea.innerHTML =
+            '<div class="message error" ' +
+            'style="display:block;">' +
+            error.message +
+            '</div>';
+
+        return;
+
+    }
+
+
+    if (
+        !profiles ||
+        profiles.length === 0
+    ) {
+
+        userArea.innerHTML =
+            '<div class="loading">' +
+            'No users found.' +
+            '</div>';
+
+        return;
+
+    }
+
+
+    // ==========================================
+    // LOAD HQ MAPPINGS
+    // ==========================================
+
+    const {
+        data: mappings,
+        error: mappingError
+    } =
+        await client
+            .from("user_hq_mapping")
+            .select(
+                "user_id, hq_id"
+            );
+
+
+    if (mappingError) {
+
+        console.error(
+            "MAPPING ERROR:",
+            mappingError
+        );
+
+    }
+
+
+    // ==========================================
+    // LOAD HQs
+    // ==========================================
+
+    const {
+        data: hqs
+    } =
+        await client
+            .from("hqs")
+            .select(
+                "id, hq_name"
+            );
+
+
+    const hqMap = {};
+
+
+    (hqs || []).forEach(
+        hq => {
+
+            hqMap[hq.id] =
+                hq.hq_name;
+
+        }
+    );
+
+
+    const userHQMap = {};
+
+
+    (mappings || []).forEach(
+        mapping => {
+
+            userHQMap[
+                mapping.user_id
+            ] =
+                hqMap[
+                    mapping.hq_id
+                ] || "";
+
+        }
+    );
+
+
+    // ==========================================
+    // BUILD TABLE
+    // ==========================================
+
+    let html = `
+
+        <div style="overflow-x:auto;">
+
+        <table style="
+            width:100%;
+            border-collapse:collapse;
+            min-width:700px;
+        ">
+
+        <thead>
+
+            <tr>
+
+                <th style="
+                    background:#008f87;
+                    color:white;
+                    padding:11px;
+                    text-align:left;
+                ">
+                    Name
+                </th>
+
+                <th style="
+                    background:#008f87;
+                    color:white;
+                    padding:11px;
+                    text-align:left;
+                ">
+                    Role
+                </th>
+
+                <th style="
+                    background:#008f87;
+                    color:white;
+                    padding:11px;
+                    text-align:left;
+                ">
+                    HQ
+                </th>
+
+                <th style="
+                    background:#008f87;
+                    color:white;
+                    padding:11px;
+                    text-align:left;
+                ">
+                    Status
+                </th>
+
+            </tr>
+
+        </thead>
+
+        <tbody>
+    `;
+
+
+    profiles.forEach(
+        profile => {
+
+            html += `
+
+                <tr>
+
+                    <td style="
+                        padding:10px;
+                        border-bottom:1px solid #ddd;
+                    ">
+                        ${escapeHTML(
+                            profile.full_name
+                        )}
+                    </td>
+
+                    <td style="
+                        padding:10px;
+                        border-bottom:1px solid #ddd;
+                    ">
+                        ${escapeHTML(
+                            profile.role || ""
+                        )}
+                    </td>
+
+                    <td style="
+                        padding:10px;
+                        border-bottom:1px solid #ddd;
+                    ">
+                        ${escapeHTML(
+                            userHQMap[
+                                profile.id
+                            ] || ""
+                        )}
+                    </td>
+
+                    <td style="
+                        padding:10px;
+                        border-bottom:1px solid #ddd;
+                        font-weight:bold;
+                        color:${
+                            profile.active
+                                ? "#146c43"
+                                : "#842029"
+                        };
+                    ">
+                        ${
+                            profile.active
+                                ? "ACTIVE"
+                                : "INACTIVE"
+                        }
+                    </td>
+
+                </tr>
+
+            `;
+
+        }
+    );
+
+
+    html += `
+
+        </tbody>
+
+        </table>
+
+        </div>
+
+    `;
+
+
+    userArea.innerHTML =
+        html;
+
+}
+
+
+
+// ======================================================
+// MESSAGE
+// ======================================================
+
+function showMessage(
+    text,
+    type
+) {
+
+    const message =
+        document.getElementById(
+            "message"
+        );
+
+
+    message.textContent =
+        text;
+
+
+    message.className =
+        "message " + type;
+
+
+    message.style.display =
+        "block";
+
+}
+
+
+
+// ======================================================
+// ESCAPE HTML
+// ======================================================
+
+function escapeHTML(text) {
+
+    const div =
+        document.createElement(
+            "div"
+        );
+
+
+    div.textContent =
+        text || "";
+
+
+    return div.innerHTML;
+
+}
+
+
+
+// ======================================================
+// NAVIGATION
+// ======================================================
+
+function goMasterData() {
+
+    window.location.href =
+        "master-data.html";
+
+}
+
+
+
+// ======================================================
+// START
+// ======================================================
+
+initializePage();
+
+
+</script>
+
+</body>
+
+</html>

@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
+
+<title>Hexadox MIS Login</title>
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+
+    margin: 0;
+
+    min-height: 100vh;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    font-family: Arial, sans-serif;
+
+    background: #f4f6f6;
+
+}
+
+
+.login-box {
+
+    width: 360px;
+
+    background: white;
+
+    padding: 35px;
+
+    border-radius: 10px;
+
+    box-shadow:
+        0 3px 15px rgba(0,0,0,0.12);
+
+}
+
+
+h1 {
+
+    text-align: center;
+
+    margin-top: 0;
+
+    margin-bottom: 30px;
+
+    color: #008f87;
+
+    font-size: 27px;
+
+}
+
+
+label {
+
+    display: block;
+
+    margin-bottom: 7px;
+
+    font-weight: bold;
+
+    color: #333;
+
+}
+
+
+input {
+
+    width: 100%;
+
+    padding: 12px;
+
+    margin-bottom: 18px;
+
+    border: 1px solid #ccc;
+
+    border-radius: 5px;
+
+    font-size: 15px;
+
+}
+
+
+input:focus {
+
+    outline: none;
+
+    border-color: #008f87;
+
+}
+
+
+button {
+
+    width: 100%;
+
+    padding: 12px;
+
+    border: none;
+
+    border-radius: 5px;
+
+    background: #008f87;
+
+    color: white;
+
+    font-size: 16px;
+
+    font-weight: bold;
+
+    cursor: pointer;
+
+}
+
+
+button:hover {
+
+    background: #007b74;
+
+}
+
+
+button:disabled {
+
+    background: #999;
+
+    cursor: not-allowed;
+
+}
+
+
+#message {
+
+    margin-top: 18px;
+
+    padding: 10px;
+
+    text-align: center;
+
+    font-weight: bold;
+
+    color: #b02a37;
+
+    min-height: 20px;
+
+}
+
+
+.footer {
+
+    text-align: center;
+
+    margin-top: 20px;
+
+    color: #777;
+
+    font-size: 12px;
+
+}
+
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<div class="login-box">
+
+
+    <h1>
+        HEXADOX MIS
+    </h1>
+
+
+    <!-- USERNAME -->
+
+    <label for="username">
+        Username
+    </label>
+
+    <input
+        type="text"
+        id="username"
+        placeholder="Enter username"
+        autocomplete="username"
+        onkeydown="handleEnter(event)"
+    >
+
+
+    <!-- PASSWORD -->
+
+    <label for="password">
+        Password
+    </label>
+
+    <input
+        type="password"
+        id="password"
+        placeholder="Enter password"
+        autocomplete="current-password"
+        onkeydown="handleEnter(event)"
+    >
+
+
+    <!-- LOGIN BUTTON -->
+
+    <button
+        id="loginButton"
+        onclick="login()"
+    >
+        LOGIN
+    </button>
+
+
+    <!-- MESSAGE -->
+
+    <div id="message"></div>
+
+
+    <div class="footer">
+        Hexadox MIS
+    </div>
+
+
+</div>
+
+
+
+<!-- SUPABASE -->
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+
+<!-- OUR APP -->
+
+<script src="app.js?v=3"></script>
+
+
+<script>
+
+// ==========================================
+// ENTER KEY LOGIN
+// ==========================================
+
+function handleEnter(event) {
+
+    if (event.key === "Enter") {
+
+        login();
+
+    }
+
+}
+
+
+// ==========================================
+// CLEAR MESSAGE WHEN USER STARTS TYPING
+// ==========================================
+
+document
+    .getElementById("username")
+    .addEventListener(
+        "input",
+        clearMessage
+    );
+
+
+document
+    .getElementById("password")
+    .addEventListener(
+        "input",
+        clearMessage
+    );
+
+
+function clearMessage() {
+
+    document
+        .getElementById("message")
+        .innerHTML = "";
+
+}
+
+
+</script>
+
+
+</body>
+
+</html>

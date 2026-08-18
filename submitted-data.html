@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Hexadox MIS - Submitted Data</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f6;
+            color: #222;
+        }
+
+        .header {
+            background: #008f87;
+            color: white;
+            padding: 18px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h2 {
+            margin: 0;
+            font-size: 22px;
+        }
+
+        .back-button {
+            background: white;
+            color: #008f87;
+            border: none;
+            padding: 9px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 25px auto;
+            padding: 0 15px;
+        }
+
+        .card {
+            background: white;
+            padding: 22px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+        }
+
+        .card h3 {
+            margin-top: 0;
+            color: #008f87;
+        }
+
+        .selection-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 7px;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 15px;
+        }
+
+        select:disabled {
+            background: #eeeeee;
+        }
+
+        .search-area {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .search-button {
+            background: #008f87;
+            color: white;
+            border: none;
+            padding: 12px 40px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .search-button:disabled {
+            background: #999;
+            cursor: not-allowed;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 850px;
+        }
+
+        th {
+            background: #008f87;
+            color: white;
+            padding: 11px 8px;
+            text-align: center;
+        }
+
+        td {
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+            text-align: center;
+        }
+
+        td.product-name {
+            text-align: left;
+            font-weight: 500;
+        }
+
+        .number-cell {
+            text-align: right;
+        }
+
+        .totals-row {
+            font-weight: bold;
+            background: #f1f5f5;
+        }
+
+        .submission-info {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .info-box {
+            background: #f5f8f8;
+            padding: 12px;
+            border-radius: 6px;
+        }
+
+        .info-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-weight: bold;
+        }
+
+        .message {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 5px;
+            display: none;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .success {
+            background: #d9f5e9;
+            color: #146c43;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #842029;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 25px;
+            font-weight: bold;
+            color: #008f87;
+        }
+
+        @media (max-width: 800px) {
+
+            .selection-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .submission-info {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+        }
+
+        @media (max-width: 550px) {
+
+            .selection-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .submission-info {
+                grid-template-columns: 1fr;
+            }
+
+            .header h2 {
+                font-size: 18px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<div class="header">
+
+    <h2>HEXADOX MIS — SUBMITTED DATA</h2>
+
+    <button class="back-button"
+            onclick="goHome()">
+        HOME
+    </button>
+
+</div>
+
+
+<div class="container">
+
+
+    <!-- FILTER -->
+
+    <div class="card">
+
+        <h3>Find Submission</h3>
+
+        <div class="selection-grid">
+
+
+            <div>
+
+                <label for="month">
+                    Month
+                </label>
+
+                <select id="month">
+
+                    <option value="">
+                        Select Month
+                    </option>
+
+                    <option value="1">January</option>
+                    <option value="2">February</option>
+                    <option value="3">March</option>
+                    <option value="4">April</option>
+                    <option value="5">May</option>
+                    <option value="6">June</option>
+                    <option value="7">July</option>
+                    <option value="8">August</option>
+                    <option value="9">September</option>
+                    <option value="10">October</option>
+                    <option value="11">November</option>
+                    <option value="12">December</option>
+
+                </select>
+
+            </div>
+
+
+            <div>
+
+                <label for="year">
+                    Year
+                </label>
+
+                <select id="year">
+
+                    <option value="">
+                        Select Year
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div>
+
+                <label for="hq">
+                    HQ
+                </label>
+
+                <select id="hq">
+
+                    <option value="">
+                        Loading HQ...
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div>
+
+                <label for="stockist">
+                    Stockist
+                </label>
+
+                <select id="stockist"
+                        disabled>
+
+                    <option value="">
+                        Select Stockist
+                    </option>
+
+                </select>
+
+            </div>
+
+        </div>
+
+
+        <div class="search-area">
+
+            <button
+                id="searchButton"
+                class="search-button"
+                onclick="searchSubmission()">
+
+                SEARCH
+
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- RESULT -->
+
+    <div class="card">
+
+        <div id="resultArea">
+
+            <div class="loading">
+
+                Select the filters and click SEARCH.
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div id="message"
+         class="message">
+    </div>
+
+
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="app.js"></script>
+
+
+<script>
+
+
+// ======================================================
+// GLOBALS
+// ======================================================
+
+let currentUser = null;
+
+let products = [];
+
+
+// ======================================================
+// INITIALIZE
+// ======================================================
+
+async function initializePage() {
+
+    const result =
+        await requireLogin();
+
+    if (!result) {
+        return;
+    }
+
+    currentUser =
+        result.user;
+
+    loadYears();
+
+    await loadHQs();
+
+}
+
+// ======================================================
+// YEARS
+// ======================================================
+
+function loadYears() {
+
+    const yearSelect =
+        document.getElementById("year");
+
+
+    const currentYear =
+        new Date().getFullYear();
+
+
+    for (
+        let year = currentYear - 2;
+        year <= currentYear + 1;
+        year++
+    ) {
+
+        const option =
+            document.createElement("option");
+
+        option.value =
+            year;
+
+        option.textContent =
+            year;
+
+        yearSelect.appendChild(option);
+
+    }
+
+
+    // Current year
+
+    yearSelect.value =
+        currentYear;
+
+
+    // Current month
+
+    document.getElementById("month").value =
+        new Date().getMonth() + 1;
+
+}
+
+
+
+// ======================================================
+// LOAD HQs
+// ======================================================
+
+async function loadHQs() {
+
+    const hqSelect =
+        document.getElementById("hq");
+
+
+    const { data: hqs, error } =
+        await client
+            .from("hqs")
+            .select("id, hq_name")
+            .eq("active", true)
+            .order("hq_name");
+
+
+    console.log("HQs:", hqs);
+
+    console.log("HQ ERROR:", error);
+
+
+    if (error) {
+
+        showMessage(
+            "Unable to load HQs: " +
+            error.message,
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    hqSelect.innerHTML =
+        '<option value="">Select HQ</option>';
+
+
+    hqs.forEach(hq => {
+
+        const option =
+            document.createElement("option");
+
+        option.value =
+            hq.id;
+
+        option.textContent =
+            hq.hq_name;
+
+        hqSelect.appendChild(option);
+
+    });
+
+}
+
+
+
+// ======================================================
+// HQ CHANGE
+// ======================================================
+
+document
+    .getElementById("hq")
+    .addEventListener(
+        "change",
+        async function() {
+
+            await loadStockists();
+
+        }
+    );
+
+
+
+// ======================================================
+// LOAD STOCKISTS
+// ======================================================
+
+async function loadStockists() {
+
+    const hqId =
+        document.getElementById("hq").value;
+
+
+    const stockistSelect =
+        document.getElementById("stockist");
+
+
+    stockistSelect.disabled =
+        true;
+
+
+    stockistSelect.innerHTML =
+        '<option value="">Loading Stockists...</option>';
+
+
+    if (!hqId) {
+
+        stockistSelect.innerHTML =
+            '<option value="">Select Stockist</option>';
+
+        return;
+
+    }
+
+
+    const { data: stockists, error } =
+        await client
+            .from("stockists")
+            .select("id, stockist_name")
+            .eq("hq_id", hqId)
+            .eq("active", true)
+            .order("stockist_name");
+
+
+    console.log("STOCKISTS:", stockists);
+
+    console.log("STOCKIST ERROR:", error);
+
+
+    if (error) {
+
+        showMessage(
+            "Unable to load stockists: " +
+            error.message,
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    stockistSelect.innerHTML =
+        '<option value="">Select Stockist</option>';
+
+
+    stockists.forEach(stockist => {
+
+        const option =
+            document.createElement("option");
+
+        option.value =
+            stockist.id;
+
+        option.textContent =
+            stockist.stockist_name;
+
+        stockistSelect.appendChild(option);
+
+    });
+
+
+    stockistSelect.disabled =
+        false;
+
+}
+
+
+
+// ======================================================
+// SEARCH
+// ======================================================
+
+async function searchSubmission() {
+
+    const month =
+        parseInt(
+            document.getElementById("month").value
+        );
+
+
+    const year =
+        parseInt(
+            document.getElementById("year").value
+        );
+
+
+    const hqId =
+        document.getElementById("hq").value;
+
+
+    const stockistId =
+        document.getElementById("stockist").value;
+
+
+    if (!month ||
+        !year ||
+        !hqId ||
+        !stockistId) {
+
+        showMessage(
+            "Please select Month, Year, HQ and Stockist.",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    const resultArea =
+        document.getElementById("resultArea");
+
+
+    resultArea.innerHTML =
+        '<div class="loading">Searching...</div>';
+
+
+    const searchButton =
+        document.getElementById("searchButton");
+
+
+    searchButton.disabled =
+        true;
+
+
+    // ==================================================
+    // FIND HEADER
+    // ==================================================
+
+    const {
+        data: headers,
+        error: headerError
+    } =
+        await client
+            .from("sales_entry_header")
+            .select(`
+                id,
+                stockist_id,
+                hq_id,
+                month,
+                year,
+                entered_by,
+                created_at
+            `)
+            .eq("stockist_id", stockistId)
+            .eq("hq_id", hqId)
+            .eq("month", month)
+            .eq("year", year)
+            .limit(1);
+
+
+    console.log("HEADER:", headers);
+
+    console.log("HEADER ERROR:", headerError);
+
+
+    if (headerError) {
+
+        resultArea.innerHTML =
+            '<div class="message error" style="display:block;">' +
+            headerError.message +
+            '</div>';
+
+        searchButton.disabled =
+            false;
+
+        return;
+
+    }
+
+
+    if (!headers ||
+        headers.length === 0) {
+
+        resultArea.innerHTML =
+            '<div class="loading">' +
+            'No submitted data found for the selected combination.' +
+            '</div>';
+
+        searchButton.disabled =
+            false;
+
+        return;
+
+    }
+
+
+    const header =
+        headers[0];
+
+
+    // ==================================================
+    // LOAD DETAILS
+    // ==================================================
+
+    const {
+        data: details,
+        error: detailError
+    } =
+        await client
+            .from("sales_entry_details")
+            .select(`
+                id,
+                entry_id,
+                product_id,
+                pts,
+                primary_units,
+                secondary_units,
+                primary_value,
+                secondary_value
+            `)
+            .eq("entry_id", header.id);
+
+
+    console.log("DETAILS:", details);
+
+    console.log("DETAIL ERROR:", detailError);
+
+
+    if (detailError) {
+
+        resultArea.innerHTML =
+            '<div class="message error" style="display:block;">' +
+            detailError.message +
+            '</div>';
+
+        searchButton.disabled =
+            false;
+
+        return;
+
+    }
+
+
+    if (!details ||
+        details.length === 0) {
+
+        resultArea.innerHTML =
+            '<div class="loading">' +
+            'Submission found, but no product details exist.' +
+            '</div>';
+
+        searchButton.disabled =
+            false;
+
+        return;
+
+    }
+
+
+    // ==================================================
+    // LOAD PRODUCTS
+    // ==================================================
+
+    const productIds =
+        details.map(
+            detail => detail.product_id
+        );
+
+
+    const {
+        data: productData,
+        error: productError
+    } =
+        await client
+            .from("products")
+            .select("id, product_name")
+            .in("id", productIds);
+
+
+    if (productError) {
+
+        resultArea.innerHTML =
+            '<div class="message error" style="display:block;">' +
+            productError.message +
+            '</div>';
+
+        searchButton.disabled =
+            false;
+
+        return;
+
+    }
+
+
+    // ==================================================
+    // LOAD HQ
+    // ==================================================
+
+    const {
+        data: hqData,
+        error: hqError
+    } =
+        await client
+            .from("hqs")
+            .select("id, hq_name")
+            .eq("id", hqId)
+            .single();
+
+
+    // ==================================================
+    // LOAD STOCKIST
+    // ==================================================
+
+    const {
+        data: stockistData,
+        error: stockistError
+    } =
+        await client
+            .from("stockists")
+            .select("id, stockist_name")
+            .eq("id", stockistId)
+            .single();
+
+
+    if (hqError ||
+        stockistError) {
+
+        console.error(
+            "HQ ERROR:",
+            hqError
+        );
+
+        console.error(
+            "STOCKIST ERROR:",
+            stockistError
+        );
+
+    }
+
+
+    renderSubmission(
+        header,
+        details,
+        productData || [],
+        hqData,
+        stockistData
+    );
+
+
+    searchButton.disabled =
+        false;
+
+}
+
+
+
+// ======================================================
+// RENDER SUBMISSION
+// ======================================================
+
+function renderSubmission(
+    header,
+    details,
+    productData,
+    hqData,
+    stockistData
+) {
+
+
+    const resultArea =
+        document.getElementById("resultArea");
+
+
+    const productMap =
+        {};
+
+
+    productData.forEach(product => {
+
+        productMap[product.id] =
+            product.product_name;
+
+    });
+
+
+    let primaryTotal =
+        0;
+
+    let secondaryTotal =
+        0;
+
+
+    let html = `
+
+        <h3>Submitted Data</h3>
+
+        <div class="submission-info">
+
+            <div class="info-box">
+
+                <div class="info-label">
+                    Month
+                </div>
+
+                <div class="info-value">
+                    ${getMonthName(header.month)}
+                    ${header.year}
+                </div>
+
+            </div>
+
+
+            <div class="info-box">
+
+                <div class="info-label">
+                    HQ
+                </div>
+
+                <div class="info-value">
+                    ${escapeHTML(
+                        hqData
+                            ? hqData.hq_name
+                            : ""
+                    )}
+                </div>
+
+            </div>
+
+
+            <div class="info-box">
+
+                <div class="info-label">
+                    Stockist
+                </div>
+
+                <div class="info-value">
+                    ${escapeHTML(
+                        stockistData
+                            ? stockistData.stockist_name
+                            : ""
+                    )}
+                </div>
+
+            </div>
+
+
+            <div class="info-box">
+
+                <div class="info-label">
+                    Submitted
+                </div>
+
+                <div class="info-value">
+                    ${formatDate(header.created_at)}
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="table-container">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>#</th>
+
+                    <th>Product</th>
+
+                    <th>PTS</th>
+
+                    <th>Primary Qty</th>
+
+                    <th>Primary Value</th>
+
+                    <th>Secondary Qty</th>
+
+                    <th>Secondary Value</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+    `;
+
+
+    details.forEach(
+        (detail, index) => {
+
+        const primaryValue =
+            Number(
+                detail.primary_value
+            ) || 0;
+
+
+        const secondaryValue =
+            Number(
+                detail.secondary_value
+            ) || 0;
+
+
+        primaryTotal +=
+            primaryValue;
+
+
+        secondaryTotal +=
+            secondaryValue;
+
+
+        html += `
+
+            <tr>
+
+                <td>
+                    ${index + 1}
+                </td>
+
+                <td class="product-name">
+                    ${escapeHTML(
+                        productMap[
+                            detail.product_id
+                        ] || "Unknown Product"
+                    )}
+                </td>
+
+                <td class="number-cell">
+                    ${Number(
+                        detail.pts
+                    ).toFixed(2)}
+                </td>
+
+                <td class="number-cell">
+                    ${detail.primary_units}
+                </td>
+
+                <td class="number-cell">
+                    ${primaryValue.toFixed(2)}
+                </td>
+
+                <td class="number-cell">
+                    ${detail.secondary_units}
+                </td>
+
+                <td class="number-cell">
+                    ${secondaryValue.toFixed(2)}
+                </td>
+
+            </tr>
+
+        `;
+
+    });
+
+
+    html += `
+
+            <tr class="totals-row">
+
+                <td colspan="4">
+                    TOTAL
+                </td>
+
+                <td class="number-cell">
+                    ${primaryTotal.toFixed(2)}
+                </td>
+
+                <td>
+                    -
+                </td>
+
+                <td class="number-cell">
+                    ${secondaryTotal.toFixed(2)}
+                </td>
+
+            </tr>
+
+            </tbody>
+
+        </table>
+
+        </div>
+
+    `;
+
+
+    resultArea.innerHTML =
+        html;
+
+}
+
+
+
+// ======================================================
+// MONTH NAME
+// ======================================================
+
+function getMonthName(month) {
+
+    const months = [
+
+        "",
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December"
+
+    ];
+
+
+    return months[month] || "";
+
+}
+
+
+
+// ======================================================
+// DATE FORMAT
+// ======================================================
+
+function formatDate(dateValue) {
+
+    if (!dateValue) {
+        return "";
+    }
+
+
+    const date =
+        new Date(dateValue);
+
+
+    return date.toLocaleString(
+        "en-IN",
+        {
+            dateStyle: "medium",
+            timeStyle: "short"
+        }
+    );
+
+}
+
+
+
+// ======================================================
+// ESCAPE HTML
+// ======================================================
+
+function escapeHTML(text) {
+
+    const div =
+        document.createElement("div");
+
+    div.textContent =
+        text;
+
+    return div.innerHTML;
+
+}
+
+
+
+// ======================================================
+// MESSAGE
+// ======================================================
+
+function showMessage(
+    text,
+    type
+) {
+
+    const message =
+        document.getElementById("message");
+
+
+    message.textContent =
+        text;
+
+
+    message.className =
+        "message " + type;
+
+
+    message.style.display =
+        "block";
+
+}
+
+
+
+// ======================================================
+// HOME
+// ======================================================
+
+function goHome() {
+
+    window.location.href =
+        "home.html";
+
+}
+
+
+
+// ======================================================
+// START
+// ======================================================
+
+initializePage();
+
+</script>
+
+
+</body>
+
+</html>

@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Hexadox MIS - HQ Master</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f6;
+            color: #222;
+        }
+
+        .header {
+            background: #008f87;
+            color: white;
+            padding: 18px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h2 {
+            margin: 0;
+            font-size: 22px;
+        }
+
+        .back-button {
+            background: white;
+            color: #008f87;
+            border: none;
+            padding: 9px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 25px auto;
+            padding: 0 15px;
+        }
+
+        .card {
+            background: white;
+            padding: 22px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+        }
+
+        .card h3 {
+            margin-top: 0;
+            color: #008f87;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 7px;
+        }
+
+        input {
+            width: 100%;
+            padding: 11px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 15px;
+        }
+
+        .save-area {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .save-button {
+            background: #008f87;
+            color: white;
+            border: none;
+            padding: 12px 40px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .save-button:disabled {
+            background: #999;
+            cursor: not-allowed;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+
+        th {
+            background: #008f87;
+            color: white;
+            padding: 11px;
+            text-align: left;
+        }
+
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .status-active {
+            color: #146c43;
+            font-weight: bold;
+        }
+
+        .status-inactive {
+            color: #842029;
+            font-weight: bold;
+        }
+
+        .action-button {
+            border: none;
+            padding: 7px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .deactivate {
+            background: #f8d7da;
+            color: #842029;
+        }
+
+        .activate {
+            background: #d9f5e9;
+            color: #146c43;
+        }
+
+        .message {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 5px;
+            display: none;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .success {
+            background: #d9f5e9;
+            color: #146c43;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #842029;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 25px;
+            color: #008f87;
+            font-weight: bold;
+        }
+
+        @media (max-width: 700px) {
+
+            .header h2 {
+                font-size: 18px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<div class="header">
+
+    <h2>HEXADOX MIS — HQ MASTER</h2>
+
+    <button class="back-button"
+            onclick="goMasterData()">
+        MASTER DATA
+    </button>
+
+</div>
+
+
+<div class="container">
+
+
+    <!-- ==========================================
+         ADD HQ
+    =========================================== -->
+
+    <div class="card">
+
+        <h3>Add New HQ</h3>
+
+        <label for="hqName">
+            HQ Name
+        </label>
+
+        <input
+            type="text"
+            id="hqName"
+            placeholder="Enter HQ name"
+        >
+
+
+        <div class="save-area">
+
+            <button
+                id="saveButton"
+                class="save-button"
+                onclick="addHQ()">
+
+                SAVE HQ
+
+            </button>
+
+        </div>
+
+
+        <div id="message"
+             class="message">
+        </div>
+
+    </div>
+
+
+
+    <!-- ==========================================
+         HQ LIST
+    =========================================== -->
+
+    <div class="card">
+
+        <h3>HQ Master</h3>
+
+        <div id="hqArea">
+
+            <div class="loading">
+                Loading HQs...
+            </div>
+
+        </div>
+
+    </div>
+
+
+</div>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="app.js"></script>
+
+
+<script>
+
+
+// ======================================================
+// INITIALIZE
+// ======================================================
+
+async function initializePage() {
+
+    const result =
+        await requireAdmin();
+
+    if (!result) {
+        return;
+    }
+
+    await loadHQs();
+
+}
+
+// ======================================================
+// LOAD HQs
+// ======================================================
+
+async function loadHQs() {
+
+    const hqArea =
+        document.getElementById(
+            "hqArea"
+        );
+
+
+    hqArea.innerHTML =
+        '<div class="loading">' +
+        'Loading HQs...' +
+        '</div>';
+
+
+    const {
+        data: hqs,
+        error
+    } =
+        await client
+            .from("hqs")
+            .select(`
+                id,
+                hq_name,
+                active,
+                created_at
+            `)
+            .order(
+                "hq_name"
+            );
+
+
+    console.log(
+        "HQs:",
+        hqs
+    );
+
+
+    console.log(
+        "HQ ERROR:",
+        error
+    );
+
+
+    if (error) {
+
+        hqArea.innerHTML =
+            '<div class="message error" ' +
+            'style="display:block;">' +
+            error.message +
+            '</div>';
+
+        return;
+
+    }
+
+
+    if (!hqs ||
+        hqs.length === 0) {
+
+        hqArea.innerHTML =
+            '<div class="loading">' +
+            'No HQs found.' +
+            '</div>';
+
+        return;
+
+    }
+
+
+    // ==================================================
+    // TABLE
+    // ==================================================
+
+    let html = `
+
+        <div class="table-container">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>HQ Name</th>
+
+                    <th>Status</th>
+
+                    <th>Action</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+    `;
+
+
+    hqs.forEach(hq => {
+
+        const active =
+            hq.active;
+
+
+        html += `
+
+            <tr>
+
+                <td>
+                    ${escapeHTML(
+                        hq.hq_name
+                    )}
+                </td>
+
+                <td class="${
+                    active
+                        ? "status-active"
+                        : "status-inactive"
+                }">
+
+                    ${
+                        active
+                            ? "ACTIVE"
+                            : "INACTIVE"
+                    }
+
+                </td>
+
+                <td>
+
+                    <button
+
+                        class="action-button ${
+                            active
+                                ? "deactivate"
+                                : "activate"
+                        }"
+
+                        onclick="toggleHQ(
+                            '${hq.id}',
+                            ${active}
+                        )">
+
+                        ${
+                            active
+                                ? "DEACTIVATE"
+                                : "ACTIVATE"
+                        }
+
+                    </button>
+
+                </td>
+
+            </tr>
+
+        `;
+
+    });
+
+
+    html += `
+
+            </tbody>
+
+        </table>
+
+        </div>
+
+    `;
+
+
+    hqArea.innerHTML =
+        html;
+
+}
+
+
+
+// ======================================================
+// ADD HQ
+// ======================================================
+
+async function addHQ() {
+
+    const input =
+        document.getElementById(
+            "hqName"
+        );
+
+
+    const hqName =
+        input.value.trim();
+
+
+    if (!hqName) {
+
+        showMessage(
+            "Please enter the HQ name.",
+            "error"
+        );
+
+        input.focus();
+
+        return;
+
+    }
+
+
+    const saveButton =
+        document.getElementById(
+            "saveButton"
+        );
+
+
+    saveButton.disabled =
+        true;
+
+
+    saveButton.textContent =
+        "SAVING...";
+
+
+    // ==================================================
+    // CHECK DUPLICATE
+    // ==================================================
+
+    const {
+        data: existing,
+        error: checkError
+    } =
+        await client
+            .from("hqs")
+            .select("id")
+            .eq(
+                "hq_name",
+                hqName
+            )
+            .limit(1);
+
+
+    if (checkError) {
+
+        showMessage(
+            "Unable to check HQ: " +
+            checkError.message,
+            "error"
+        );
+
+
+        saveButton.disabled =
+            false;
+
+
+        saveButton.textContent =
+            "SAVE HQ";
+
+
+        return;
+
+    }
+
+
+    if (existing &&
+        existing.length > 0) {
+
+        showMessage(
+            "This HQ already exists.",
+            "error"
+        );
+
+
+        saveButton.disabled =
+            false;
+
+
+        saveButton.textContent =
+            "SAVE HQ";
+
+
+        return;
+
+    }
+
+
+    // ==================================================
+    // INSERT HQ
+    // ==================================================
+
+    const {
+        error
+    } =
+        await client
+            .from("hqs")
+            .insert({
+
+                hq_name:
+                    hqName,
+
+                active:
+                    true
+
+            });
+
+
+    if (error) {
+
+        console.error(
+            "ADD HQ ERROR:",
+            error
+        );
+
+
+        showMessage(
+            "Unable to add HQ: " +
+            error.message,
+            "error"
+        );
+
+
+        saveButton.disabled =
+            false;
+
+
+        saveButton.textContent =
+            "SAVE HQ";
+
+
+        return;
+
+    }
+
+
+    // ==================================================
+    // SUCCESS
+    // ==================================================
+
+    showMessage(
+        "HQ added successfully.",
+        "success"
+    );
+
+
+    input.value =
+        "";
+
+
+    saveButton.disabled =
+        false;
+
+
+    saveButton.textContent =
+        "SAVE HQ";
+
+
+    await loadHQs();
+
+}
+
+
+
+// ======================================================
+// ACTIVATE / DEACTIVATE HQ
+// ======================================================
+
+async function toggleHQ(
+    hqId,
+    currentStatus
+) {
+
+    const newStatus =
+        !currentStatus;
+
+
+    const actionText =
+        newStatus
+            ? "activate"
+            : "deactivate";
+
+
+    const confirmed =
+        confirm(
+            "Are you sure you want to " +
+            actionText +
+            " this HQ?"
+        );
+
+
+    if (!confirmed) {
+
+        return;
+
+    }
+
+
+    const {
+        error
+    } =
+        await client
+            .from("hqs")
+            .update({
+
+                active:
+                    newStatus
+
+            })
+            .eq(
+                "id",
+                hqId
+            );
+
+
+    if (error) {
+
+        showMessage(
+            "Unable to update HQ: " +
+            error.message,
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    showMessage(
+        newStatus
+            ? "HQ activated."
+            : "HQ deactivated.",
+        "success"
+    );
+
+
+    await loadHQs();
+
+}
+
+
+
+// ======================================================
+// MESSAGE
+// ======================================================
+
+function showMessage(
+    text,
+    type
+) {
+
+    const message =
+        document.getElementById(
+            "message"
+        );
+
+
+    message.textContent =
+        text;
+
+
+    message.className =
+        "message " + type;
+
+
+    message.style.display =
+        "block";
+
+}
+
+
+
+// ======================================================
+// ESCAPE HTML
+// ======================================================
+
+function escapeHTML(text) {
+
+    const div =
+        document.createElement(
+            "div"
+        );
+
+
+    div.textContent =
+        text;
+
+
+    return div.innerHTML;
+
+}
+
+
+
+// ======================================================
+// MASTER DATA
+// ======================================================
+
+function goMasterData() {
+
+    window.location.href =
+        "master-data.html";
+
+}
+
+
+
+// ======================================================
+// START
+// ======================================================
+
+initializePage();
+
+
+</script>
+
+
+</body>
+
+</html>

@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Hexadox MIS - Master Data</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f6;
+            color: #222;
+        }
+
+        .header {
+            background: #008f87;
+            color: white;
+            padding: 18px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h2 {
+            margin: 0;
+            font-size: 22px;
+        }
+
+        .back-button {
+            background: white;
+            color: #008f87;
+            border: none;
+            padding: 9px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 0 15px;
+        }
+
+        .welcome {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .welcome h3 {
+            color: #008f87;
+            margin-bottom: 5px;
+        }
+
+        .welcome p {
+            color: #666;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .menu-card {
+            background: white;
+            padding: 30px 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .menu-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.12);
+        }
+
+        .menu-card h3 {
+            margin: 10px 0;
+            color: #008f87;
+        }
+
+        .menu-card p {
+            margin: 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .icon {
+            font-size: 38px;
+        }
+
+        @media (max-width: 650px) {
+
+            .menu-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header h2 {
+                font-size: 18px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<div class="header">
+
+    <h2>HEXADOX MIS — MASTER DATA</h2>
+
+    <button class="back-button"
+            onclick="goHome()">
+        HOME
+    </button>
+
+</div>
+
+
+<div class="container">
+
+
+    <div class="welcome">
+
+        <h3>Master Data Management</h3>
+
+        <p>
+            Manage the master information used by the MIS.
+        </p>
+
+    </div>
+
+
+    <div class="menu-grid">
+
+
+        <!-- STOCKISTS -->
+
+        <div class="menu-card"
+             onclick="openStockists()">
+
+            <div class="icon">
+                🏢
+            </div>
+
+            <h3>
+                STOCKISTS
+            </h3>
+
+            <p>
+                Add, activate or deactivate stockists.
+            </p>
+
+        </div>
+
+
+        <!-- PRODUCTS -->
+
+        <div class="menu-card"
+             onclick="openProducts()">
+
+            <div class="icon">
+                📦
+            </div>
+
+            <h3>
+                PRODUCTS
+            </h3>
+
+            <p>
+                Add, activate or deactivate products.
+            </p>
+
+        </div>
+
+
+        <!-- HQ -->
+
+        <div class="menu-card"
+             onclick="openHQs()">
+
+            <div class="icon">
+                📍
+            </div>
+
+            <h3>
+                HQs
+            </h3>
+
+            <p>
+                Manage company headquarters.
+            </p>
+
+        </div>
+
+
+        <!-- USERS -->
+
+        <div class="menu-card"
+             onclick="openUsers()">
+
+            <div class="icon">
+                👤
+            </div>
+
+            <h3>
+                USERS
+            </h3>
+
+            <p>
+                Manage MIS users and access.
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="app.js"></script>
+
+
+<script>
+
+
+// ======================================================
+// CHECK LOGIN
+// ======================================================
+
+async function initializePage() {
+
+    const result =
+        await requireAdmin();
+
+    if (!result) {
+        return;
+    }
+
+}
+
+// ======================================================
+// NAVIGATION
+// ======================================================
+
+function openStockists() {
+
+    window.location.href =
+        "stockist-master.html";
+
+}
+
+
+function openProducts() {
+
+    window.location.href =
+        "product-master.html";
+
+}
+
+
+function openHQs() {
+
+    window.location.href =
+        "hq-master.html";
+
+}
+
+
+function openUsers() {
+
+    window.location.href =
+        "user-master.html";
+
+}
+
+
+function goHome() {
+
+    window.location.href =
+        "home.html";
+
+}
+
+
+
+// ======================================================
+// START
+// ======================================================
+
+initializePage();
+
+
+</script>
+
+
+</body>
+
+</html>
