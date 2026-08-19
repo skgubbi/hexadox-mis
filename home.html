@@ -27,6 +27,13 @@
 <button onclick="window.location.href='data-entry.html'">DATA ENTRY</button>
 <button onclick="window.location.href='submitted-data.html'">SUBMITTED DATA</button>
 
+<!-- EDIT SUBMITTED DATA — ADMIN / ABM -->
+<button id="editDataButton"
+        onclick="window.location.href='edit-data.html'"
+        style="display:none;">
+    EDIT SUBMITTED DATA
+</button>
+
 <!-- TARGET SHEET — ADMIN / ABM -->
 <button id="targetButton"
         onclick="window.location.href='target.html'"
@@ -112,6 +119,7 @@ async function checkSession() {
 
     if (profile.role === "Admin" || profile.role === "ABM") {
         document.getElementById("targetButton").style.display = "block";
+        document.getElementById("editDataButton").style.display = "block";
     }
 
     if (profile.role === "Admin") {
