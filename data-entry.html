@@ -186,6 +186,14 @@
             background: #f1f5f5;
         }
 
+
+        .product-entry-row select { min-width: 220px; }
+        .product-entry-row input { width: 105px; }
+        .add-row-button { background: #f0c419; color: #222; border: none; padding: 10px 22px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .add-row-button:hover { opacity: 0.9; }
+        .remove-row-button { background: #e9ecef; color: #842029; border: 1px solid #ccc; padding: 7px 10px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .entry-summary { margin: 12px 0; font-weight: bold; }
+
         @media (max-width: 700px) {
 
             .selection-grid {
@@ -321,6 +329,12 @@
 
         </div>
 
+        <div class="submit-area" style="margin-top:20px;">
+            <button id="startEntryButton" class="submit-button" onclick="startProductEntry()">
+                ENTER PRODUCT DATA
+            </button>
+        </div>
+
     </div>
 
 
@@ -332,7 +346,7 @@
         <div id="productArea">
 
             <div class="loading">
-                Select Month, Year, HQ and Stockist
+                Select Month, Year, HQ and Stockist, then click ENTER PRODUCT DATA
             </div>
 
         </div>
@@ -636,28 +650,25 @@ document
     .getElementById("stockist")
     .addEventListener(
         "change",
-        async function() {
-
-            currentStockist =
-                this.value;
-
-
-            if (this.value) {
-
-                await loadProducts();
-
-            }
-
-            else {
-
-                document.getElementById("productArea").innerHTML =
-                    '<div class="loading">Select a Stockist</div>';
-
-            }
-
+        function() {
+            currentStockist = this.value;
+            document.getElementById("productArea").innerHTML =
+                '<div class="loading">Select Month, Year, HQ and Stockist, then click ENTER PRODUCT DATA</div>';
         }
     );
 
+
+// ======================================================
+// PERIOD CHANGE
+// ======================================================
+
+document.getElementById("month").addEventListener("change", resetProductEntry);
+document.getElementById("year").addEventListener("change", resetProductEntry);
+
+function resetProductEntry() {
+    document.getElementById("productArea").innerHTML =
+        '<div class="loading">Select Month, Year, HQ and Stockist, then click ENTER PRODUCT DATA</div>';
+}
 
 
 // ======================================================
@@ -714,733 +725,183 @@ async function loadProducts() {
     }
 
 
-    renderProductTable();
-
 }
 
 
 
 // ======================================================
-// PRODUCT TABLE
+// START PRODUCT ENTRY
+// ======================================================
+
+async function startProductEntry() {
+    const month = document.getElementById("month").value;
+    const year = document.getElementById("year").value;
+    const hq = document.getElementById("hq").value;
+    const stockist = document.getElementById("stockist").value;
+
+    if (!month || !year || !hq || !stockist) {
+        showMessage("Please select Month, Year, HQ and Stockist first.", "error");
+        return;
+    }
+    await loadProducts();
+    if (products.length === 0) {
+        showMessage("No active products available.", "error");
+        return;
+    }
+    renderProductTable();
+    document.getElementById("productArea").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+// ======================================================
+// RENDER PRODUCT TABLE
 // ======================================================
 
 function renderProductTable() {
-
-    const productArea =
-        document.getElementById("productArea");
-
-
-    let html = `
-
+    const productArea = document.getElementById("productArea");
+    productArea.innerHTML = `
+        <div class="entry-summary">Enter only products that have sale. Use + ADD PRODUCT for the next row.</div>
         <div class="table-container">
-
-        <table>
-
-            <thead>
-
-                <tr>
-
-                    <th>#</th>
-
-                    <th>Product</th>
-
-                    <th>PTS</th>
-
-                    <th>Primary Qty</th>
-
-                    <th>Primary Value</th>
-
-                    <th>Secondary Qty</th>
-
-                    <th>Secondary Value</th>
-
-                </tr>
-
-            </thead>
-
-            <tbody>
-
-    `;
-
-
-    products.forEach(
-        (product, index) => {
-
-        html += `
-
-            <tr>
-
-                <td>
-                    ${index + 1}
-                </td>
-
-                <td class="product-name">
-                    ${escapeHTML(
-                        product.product_name
-                    )}
-                </td>
-
-                <td>
-
-                    <input
-                        type="number"
-                        class="pts"
-                        data-product="${product.id}"
-                        min="0"
-                        step="0.01"
-                        placeholder="PTS"
-                    >
-
-                </td>
-
-                <td>
-
-                    <input
-                        type="number"
-                        class="primary"
-                        data-product="${product.id}"
-                        step="1"
-                        placeholder="0"
-                        oninput="calculateRow('${product.id}')"
-                    >
-
-                </td>
-
-                <td
-                    class="value-cell"
-                    id="primary-value-${product.id}">
-                    0.00
-                </td>
-
-                <td>
-
-                    <input
-                        type="number"
-                        class="secondary"
-                        data-product="${product.id}"
-                        step="1"
-                        placeholder="0"
-                        oninput="calculateRow('${product.id}')"
-                    >
-
-                </td>
-
-                <td
-                    class="value-cell"
-                    id="secondary-value-${product.id}">
-                    0.00
-                </td>
-
-            </tr>
-
-        `;
-
-    });
-
-
-    html += `
-
-            <tr class="totals-row">
-
-                <td colspan="4">
-                    TOTAL
-                </td>
-
-                <td id="total-primary">
-                    0.00
-                </td>
-
-                <td>
-                    -
-                </td>
-
-                <td id="total-secondary">
-                    0.00
-                </td>
-
-            </tr>
-
-            </tbody>
-
-        </table>
-
+            <table>
+                <thead><tr>
+                    <th>#</th><th>Product</th><th>PTS</th><th>Primary Qty</th><th>Primary Value</th><th>Secondary Qty</th><th>Secondary Value</th><th>Action</th>
+                </tr></thead>
+                <tbody id="productRows"></tbody>
+                <tfoot><tr class="totals-row">
+                    <td colspan="4">TOTAL</td><td id="total-primary">0.00</td><td>-</td><td id="total-secondary">0.00</td><td>-</td>
+                </tr></tfoot>
+            </table>
         </div>
-
-
-        <div class="submit-area">
-
-            <button
-                id="submitButton"
-                class="submit-button"
-                onclick="submitData()">
-
-                SUBMIT DATA
-
-            </button>
-
-        </div>
-
-    `;
-
-
-    productArea.innerHTML =
-        html;
-
+        <div class="submit-area" style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+            <button class="add-row-button" onclick="addProductRow()">+ ADD PRODUCT</button>
+            <button id="submitButton" class="submit-button" onclick="submitData()">SAVE DATA</button>
+        </div>`;
+    addProductRow();
 }
 
+function addProductRow() {
+    const tbody = document.getElementById("productRows");
+    if (!tbody) return;
+    const row = document.createElement("tr");
+    row.className = "product-entry-row";
+    row.innerHTML = `
+        <td></td>
+        <td><select class="product-select" onchange="productChanged(this)">
+            <option value="">Select Product</option>
+            ${products.map(product => `<option value="${escapeHTML(product.id)}">${escapeHTML(product.product_name)}</option>`).join("")}
+        </select></td>
+        <td><input type="number" class="pts" min="0" step="0.01" placeholder="PTS" oninput="calculateEntryRow(this.closest('tr'))"></td>
+        <td><input type="number" class="primary" min="0" step="1" placeholder="0" oninput="calculateEntryRow(this.closest('tr'))"></td>
+        <td class="value-cell primary-value">0.00</td>
+        <td><input type="number" class="secondary" min="0" step="1" placeholder="0" oninput="calculateEntryRow(this.closest('tr'))"></td>
+        <td class="value-cell secondary-value">0.00</td>
+        <td><button type="button" class="remove-row-button" onclick="removeProductRow(this)">REMOVE</button></td>`;
+    tbody.appendChild(row);
+    updateRowNumbers();
+}
 
+function productChanged(select) {
+    const selectedId = select.value;
+    if (selectedId && [...document.querySelectorAll(".product-select")].some(other => other !== select && other.value === selectedId)) {
+        showMessage("This product is already selected. Please choose another product.", "error");
+        select.value = "";
+    }
+    calculateEntryRow(select.closest("tr"));
+}
 
-// ======================================================
-// CALCULATE ROW
-// ======================================================
-
-function calculateRow(productId) {
-
-    const ptsInput =
-        document.querySelector(
-            `.pts[data-product="${productId}"]`
-        );
-
-
-    const primaryInput =
-        document.querySelector(
-            `.primary[data-product="${productId}"]`
-        );
-
-
-    const secondaryInput =
-        document.querySelector(
-            `.secondary[data-product="${productId}"]`
-        );
-
-
-    const pts =
-        parseFloat(ptsInput.value) || 0;
-
-
-    const primary =
-        parseInt(primaryInput.value) || 0;
-
-
-    const secondary =
-        parseInt(secondaryInput.value) || 0;
-
-
-    document.getElementById(
-        `primary-value-${productId}`
-    ).textContent =
-        (pts * primary).toFixed(2);
-
-
-    document.getElementById(
-        `secondary-value-${productId}`
-    ).textContent =
-        (pts * secondary).toFixed(2);
-
-
+function removeProductRow(button) {
+    const row = button.closest("tr");
+    const tbody = document.getElementById("productRows");
+    if (!row || !tbody) return;
+    if (tbody.children.length === 1) {
+        row.querySelector(".product-select").value = "";
+        row.querySelector(".pts").value = "";
+        row.querySelector(".primary").value = "";
+        row.querySelector(".secondary").value = "";
+        calculateEntryRow(row);
+        return;
+    }
+    row.remove();
+    updateRowNumbers();
     calculateTotals();
-
 }
 
-
-
-// ======================================================
-// TOTALS
-// ======================================================
+function calculateEntryRow(row) {
+    if (!row) return;
+    const pts = parseFloat(row.querySelector(".pts").value) || 0;
+    const primary = parseInt(row.querySelector(".primary").value) || 0;
+    const secondary = parseInt(row.querySelector(".secondary").value) || 0;
+    row.querySelector(".primary-value").textContent = (pts * primary).toFixed(2);
+    row.querySelector(".secondary-value").textContent = (pts * secondary).toFixed(2);
+    calculateTotals();
+}
 
 function calculateTotals() {
-
-    let primaryTotal =
-        0;
-
-    let secondaryTotal =
-        0;
-
-
-    products.forEach(product => {
-
-        const ptsInput =
-            document.querySelector(
-                `.pts[data-product="${product.id}"]`
-            );
-
-
-        const primaryInput =
-            document.querySelector(
-                `.primary[data-product="${product.id}"]`
-            );
-
-
-        const secondaryInput =
-            document.querySelector(
-                `.secondary[data-product="${product.id}"]`
-            );
-
-
-        if (!ptsInput) {
-            return;
-        }
-
-
-        const pts =
-            parseFloat(ptsInput.value) || 0;
-
-
-        const primary =
-            parseInt(primaryInput.value) || 0;
-
-
-        const secondary =
-            parseInt(secondaryInput.value) || 0;
-
-
-        primaryTotal +=
-            pts * primary;
-
-
-        secondaryTotal +=
-            pts * secondary;
-
+    let primaryTotal = 0, secondaryTotal = 0;
+    document.querySelectorAll("#productRows .product-entry-row").forEach(row => {
+        const pts = parseFloat(row.querySelector(".pts").value) || 0;
+        const primary = parseInt(row.querySelector(".primary").value) || 0;
+        const secondary = parseInt(row.querySelector(".secondary").value) || 0;
+        primaryTotal += pts * primary;
+        secondaryTotal += pts * secondary;
     });
-
-
-    document.getElementById(
-        "total-primary"
-    ).textContent =
-        primaryTotal.toFixed(2);
-
-
-    document.getElementById(
-        "total-secondary"
-    ).textContent =
-        secondaryTotal.toFixed(2);
-
+    if (document.getElementById("total-primary")) document.getElementById("total-primary").textContent = primaryTotal.toFixed(2);
+    if (document.getElementById("total-secondary")) document.getElementById("total-secondary").textContent = secondaryTotal.toFixed(2);
 }
 
-
+function updateRowNumbers() {
+    document.querySelectorAll("#productRows .product-entry-row").forEach((row,index) => row.children[0].textContent = index + 1);
+}
 
 // ======================================================
-// SUBMIT DATA
+// SAVE DATA
 // ======================================================
 
 async function submitData() {
-
-    const month =
-        parseInt(
-            document.getElementById("month").value
-        );
-
-
-    const year =
-        parseInt(
-            document.getElementById("year").value
-        );
-
-
-    const hqId =
-        document.getElementById("hq").value;
-
-
-    const stockistId =
-        document.getElementById("stockist").value;
-
-
-    if (!month ||
-        !year ||
-        !hqId ||
-        !stockistId) {
-
-        showMessage(
-            "Please select Month, Year, HQ and Stockist.",
-            "error"
-        );
-
-        return;
-
-    }
-
-
-    if (products.length === 0) {
-
-        showMessage(
-            "No products available.",
-            "error"
-        );
-
-        return;
-
-    }
-
-
-
-    // ==================================================
-    // CHECK DUPLICATE SUBMISSION
-    // ==================================================
-
-    const {
-        data: existing,
-        error: existingError
-    } =
-        await client
-            .from("sales_entry_header")
-            .select("id")
-            .eq("stockist_id", stockistId)
-            .eq("hq_id", hqId)
-            .eq("month", month)
-            .eq("year", year)
-            .limit(1);
-
-
-    if (existingError) {
-
-        showMessage(
-            "Unable to check existing submission: " +
-            existingError.message,
-            "error"
-        );
-
-        return;
-
-    }
-
-
-    if (existing &&
-        existing.length > 0) {
-
-        showMessage(
-            "Data has already been submitted for this Stockist, HQ and Month.",
-            "error"
-        );
-
-        return;
-
-    }
-
-
-
-    // ==================================================
-    // COLLECT PRODUCT DATA
-    // ==================================================
+    const month = parseInt(document.getElementById("month").value);
+    const year = parseInt(document.getElementById("year").value);
+    const hqId = document.getElementById("hq").value;
+    const stockistId = document.getElementById("stockist").value;
+    if (!month || !year || !hqId || !stockistId) { showMessage("Please select Month, Year, HQ and Stockist.", "error"); return; }
 
     const details = [];
-
-
-    for (const product of products) {
-
-        const ptsInput =
-            document.querySelector(
-                `.pts[data-product="${product.id}"]`
-            );
-
-
-        const primaryInput =
-            document.querySelector(
-                `.primary[data-product="${product.id}"]`
-            );
-
-
-        const secondaryInput =
-            document.querySelector(
-                `.secondary[data-product="${product.id}"]`
-            );
-
-
-        const ptsValue =
-            ptsInput.value.trim();
-
-
-        const primaryValue =
-            primaryInput.value.trim();
-
-
-        const secondaryValue =
-            secondaryInput.value.trim();
-
-
-        // PTS OPTIONAL
-        // Blank PTS is treated as 0
-
-        const pts =
-            ptsValue === ""
-                ? 0
-                : parseFloat(ptsValue);
-
-
-        if (!Number.isFinite(pts) ||
-            pts < 0) {
-
-            showMessage(
-                "PTS must be a valid positive number.",
-                "error"
-            );
-
-            ptsInput.focus();
-
-            return;
-
-        }
-
-
-        // BLANK = ZERO
-
-        const primaryUnits =
-            primaryValue === ""
-                ? 0
-                : Number(primaryValue);
-
-
-        const secondaryUnits =
-            secondaryValue === ""
-                ? 0
-                : Number(secondaryValue);
-
-
-        // WHOLE NUMBER VALIDATION
-
-        if (!Number.isInteger(primaryUnits)) {
-
-            showMessage(
-                "Primary Quantity must be a whole number.",
-                "error"
-            );
-
-            primaryInput.focus();
-
-            return;
-
-        }
-
-
-        if (!Number.isInteger(secondaryUnits)) {
-
-            showMessage(
-                "Secondary Quantity must be a whole number.",
-                "error"
-            );
-
-            secondaryInput.focus();
-
-            return;
-
-        }
-
-
-        // NOTE:
-        // We deliberately DO NOT calculate/store
-        // primary_value or secondary_value here.
-        //
-        // Those columns are generated by PostgreSQL.
-
-
-        details.push({
-
-            product_id:
-                product.id,
-
-            pts:
-                pts,
-
-            primary_units:
-                primaryUnits,
-
-            secondary_units:
-                secondaryUnits
-
-        });
-
+    for (const row of [...document.querySelectorAll("#productRows .product-entry-row")]) {
+        const productId = row.querySelector(".product-select").value;
+        const ptsValue = row.querySelector(".pts").value.trim();
+        const primaryValue = row.querySelector(".primary").value.trim();
+        const secondaryValue = row.querySelector(".secondary").value.trim();
+        if (!productId && !ptsValue && !primaryValue && !secondaryValue) continue;
+        if (!productId) { showMessage("Please select a product in every used row.", "error"); row.querySelector(".product-select").focus(); return; }
+        const pts = ptsValue === "" ? 0 : parseFloat(ptsValue);
+        const primaryUnits = primaryValue === "" ? 0 : Number(primaryValue);
+        const secondaryUnits = secondaryValue === "" ? 0 : Number(secondaryValue);
+        if (!Number.isFinite(pts) || pts < 0) { showMessage("PTS must be a valid positive number.", "error"); row.querySelector(".pts").focus(); return; }
+        if (!Number.isInteger(primaryUnits) || primaryUnits < 0) { showMessage("Primary Quantity must be a whole number.", "error"); row.querySelector(".primary").focus(); return; }
+        if (!Number.isInteger(secondaryUnits) || secondaryUnits < 0) { showMessage("Secondary Quantity must be a whole number.", "error"); row.querySelector(".secondary").focus(); return; }
+        details.push({product_id: productId, pts, primary_units: primaryUnits, secondary_units: secondaryUnits});
     }
+    if (details.length === 0) { showMessage("Please enter at least one product before saving.", "error"); return; }
+    if (new Set(details.map(d => d.product_id)).size !== details.length) { showMessage("A product can be entered only once in this submission.", "error"); return; }
 
+    const {data: existing, error: existingError} = await client.from("sales_entry_header").select("id").eq("stockist_id",stockistId).eq("hq_id",hqId).eq("month",month).eq("year",year).limit(1);
+    if (existingError) { showMessage("Unable to check existing submission: " + existingError.message, "error"); return; }
+    if (existing && existing.length > 0) { showMessage("Data has already been submitted for this Stockist, HQ and Month.", "error"); return; }
 
+    const submitButton = document.getElementById("submitButton");
+    submitButton.disabled = true; submitButton.textContent = "SAVING...";
+    const {data: header, error: headerError} = await client.from("sales_entry_header").insert({stockist_id:stockistId,hq_id:hqId,month,year,entered_by:currentUser.id}).select("id").single();
+    if (headerError) { showMessage("Unable to save submission: " + headerError.message, "error"); submitButton.disabled=false; submitButton.textContent="SAVE DATA"; return; }
 
-    // ==================================================
-    // DISABLE BUTTON
-    // ==================================================
-
-    const submitButton =
-        document.getElementById(
-            "submitButton"
-        );
-
-
-    submitButton.disabled =
-        true;
-
-
-    submitButton.textContent =
-        "SUBMITTING...";
-
-
-
-    // ==================================================
-    // INSERT HEADER
-    // ==================================================
-
-    const {
-        data: header,
-        error: headerError
-    } =
-        await client
-            .from("sales_entry_header")
-            .insert({
-
-                stockist_id:
-                    stockistId,
-
-                hq_id:
-                    hqId,
-
-                month:
-                    month,
-
-                year:
-                    year,
-
-                entered_by:
-                    currentUser.id
-
-            })
-            .select("id")
-            .single();
-
-
-    if (headerError) {
-
-        console.error(
-            "HEADER ERROR:",
-            headerError
-        );
-
-
-        showMessage(
-            "Unable to save submission: " +
-            headerError.message,
-            "error"
-        );
-
-
-        submitButton.disabled =
-            false;
-
-
-        submitButton.textContent =
-            "SUBMIT DATA";
-
-
-        return;
-
-    }
-
-
-
-    // ==================================================
-    // INSERT DETAILS
-    // ==================================================
-
-    const detailRows =
-        details.map(detail => ({
-
-            entry_id:
-                header.id,
-
-            product_id:
-                detail.product_id,
-
-            pts:
-                detail.pts,
-
-            primary_units:
-                detail.primary_units,
-
-            secondary_units:
-                detail.secondary_units
-
-        }));
-
-
-    console.log(
-        "DETAIL ROWS:",
-        detailRows
-    );
-
-
-    const {
-        error: detailError
-    } =
-        await client
-            .from("sales_entry_details")
-            .insert(detailRows);
-
-
-
-    // ==================================================
-    // DETAIL INSERT ERROR
-    // ==================================================
-
+    const detailRows = details.map(d => ({entry_id:header.id,product_id:d.product_id,pts:d.pts,primary_units:d.primary_units,secondary_units:d.secondary_units}));
+    const {error: detailError} = await client.from("sales_entry_details").insert(detailRows);
     if (detailError) {
-
-        console.error(
-            "DETAIL ERROR:",
-            detailError
-        );
-
-
-        // Remove header because details failed.
-
-        await client
-            .from("sales_entry_header")
-            .delete()
-            .eq("id", header.id);
-
-
-        showMessage(
-            "Product data could not be saved: " +
-            detailError.message,
-            "error"
-        );
-
-
-        submitButton.disabled =
-            false;
-
-
-        submitButton.textContent =
-            "SUBMIT DATA";
-
-
-        return;
-
+        await client.from("sales_entry_header").delete().eq("id",header.id);
+        showMessage("Product data could not be saved: " + detailError.message, "error");
+        submitButton.disabled=false; submitButton.textContent="SAVE DATA"; return;
     }
-
-
-
-    // ==================================================
-    // SUCCESS
-    // ==================================================
-
-    showMessage(
-        "Data submitted successfully.",
-        "success"
-    );
-
-
-    submitButton.textContent =
-        "SUBMITTED";
-
-
-    // Lock the form after submission.
-
-    document.querySelectorAll(
-        "input, select"
-    ).forEach(element => {
-
-        element.disabled =
-            true;
-
-    });
-
+    showMessage("Data saved successfully.", "success");
+    submitButton.textContent="SAVED";
+    document.getElementById("productArea").querySelectorAll("input, select, button").forEach(element => element.disabled=true);
 }
-
-
 
 // ======================================================
 // MESSAGE
