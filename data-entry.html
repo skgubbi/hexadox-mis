@@ -790,9 +790,9 @@ function addProductRow() {
             ${products.map(product => `<option value="${escapeHTML(product.id)}">${escapeHTML(product.product_name)}</option>`).join("")}
         </select></td>
         <td><input type="number" class="pts" min="0" step="0.01" placeholder="PTS" oninput="calculateEntryRow(this.closest('tr'))"></td>
-        <td><input type="number" class="primary" min="0" step="1" placeholder="0" oninput="calculateEntryRow(this.closest('tr'))"></td>
+        <td><input type="number" class="primary" step="1" placeholder="0" oninput="calculateEntryRow(this.closest('tr'))"></td>
         <td class="value-cell primary-value">0.00</td>
-        <td><input type="number" class="secondary" min="0" step="1" placeholder="0" oninput="calculateEntryRow(this.closest('tr'))"></td>
+        <td><input type="number" class="secondary" step="1" placeholder="0" oninput="calculateEntryRow(this.closest('tr'))"></td>
         <td class="value-cell secondary-value">0.00</td>
         <td><button type="button" class="remove-row-button" onclick="removeProductRow(this)">REMOVE</button></td>`;
     tbody.appendChild(row);
@@ -875,8 +875,8 @@ async function submitData() {
         const primaryUnits = primaryValue === "" ? 0 : Number(primaryValue);
         const secondaryUnits = secondaryValue === "" ? 0 : Number(secondaryValue);
         if (!Number.isFinite(pts) || pts < 0) { showMessage("PTS must be a valid positive number.", "error"); row.querySelector(".pts").focus(); return; }
-        if (!Number.isInteger(primaryUnits) || primaryUnits < 0) { showMessage("Primary Quantity must be a whole number.", "error"); row.querySelector(".primary").focus(); return; }
-        if (!Number.isInteger(secondaryUnits) || secondaryUnits < 0) { showMessage("Secondary Quantity must be a whole number.", "error"); row.querySelector(".secondary").focus(); return; }
+        if (!Number.isInteger(primaryUnits)) { showMessage("Primary Quantity must be a whole number.", "error"); row.querySelector(".primary").focus(); return; }
+        if (!Number.isInteger(secondaryUnits)) { showMessage("Secondary Quantity must be a whole number.", "error"); row.querySelector(".secondary").focus(); return; }
         details.push({product_id: productId, pts, primary_units: primaryUnits, secondary_units: secondaryUnits});
     }
     if (details.length === 0) { showMessage("Please enter at least one product before saving.", "error"); return; }
