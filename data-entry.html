@@ -744,7 +744,6 @@ function renderProductTable() {
 
                     <th>Product</th>
 
-                    <th>PTS</th>
 
                     <th>Primary Qty</th>
 
@@ -778,19 +777,6 @@ function renderProductTable() {
                     ${escapeHTML(
                         product.product_name
                     )}
-                </td>
-
-                <td>
-
-                    <input
-                        type="number"
-                        class="pts"
-                        data-product="${product.id}"
-                        min="0"
-                        step="0.01"
-                        placeholder="PTS"
-                    >
-
                 </td>
 
                 <td>
@@ -842,7 +828,7 @@ function renderProductTable() {
 
             <tr class="totals-row">
 
-                <td colspan="4">
+                <td colspan="3">
                     TOTAL
                 </td>
 
@@ -896,52 +882,28 @@ function renderProductTable() {
 
 function calculateRow(productId) {
 
-    const ptsInput =
-        document.querySelector(
-            `.pts[data-product="${productId}"]`
-        );
-
-
     const primaryInput =
         document.querySelector(
             `.primary[data-product="${productId}"]`
         );
-
 
     const secondaryInput =
         document.querySelector(
             `.secondary[data-product="${productId}"]`
         );
 
-
-    const pts =
-        parseFloat(ptsInput.value) || 0;
-
-
-    const primary =
-        parseInt(primaryInput.value) || 0;
-
-
-    const secondary =
-        parseInt(secondaryInput.value) || 0;
-
-
+    // PTS is no longer entered in Data Entry.
+    // Value is intentionally displayed as 0.00.
     document.getElementById(
         `primary-value-${productId}`
-    ).textContent =
-        (pts * primary).toFixed(2);
-
+    ).textContent = "0.00";
 
     document.getElementById(
         `secondary-value-${productId}`
-    ).textContent =
-        (pts * secondary).toFixed(2);
-
+    ).textContent = "0.00";
 
     calculateTotals();
-
 }
-
 
 
 // ======================================================
@@ -950,73 +912,16 @@ function calculateRow(productId) {
 
 function calculateTotals() {
 
-    let primaryTotal =
-        0;
-
-    let secondaryTotal =
-        0;
-
-
-    products.forEach(product => {
-
-        const ptsInput =
-            document.querySelector(
-                `.pts[data-product="${product.id}"]`
-            );
-
-
-        const primaryInput =
-            document.querySelector(
-                `.primary[data-product="${product.id}"]`
-            );
-
-
-        const secondaryInput =
-            document.querySelector(
-                `.secondary[data-product="${product.id}"]`
-            );
-
-
-        if (!ptsInput) {
-            return;
-        }
-
-
-        const pts =
-            parseFloat(ptsInput.value) || 0;
-
-
-        const primary =
-            parseInt(primaryInput.value) || 0;
-
-
-        const secondary =
-            parseInt(secondaryInput.value) || 0;
-
-
-        primaryTotal +=
-            pts * primary;
-
-
-        secondaryTotal +=
-            pts * secondary;
-
-    });
-
-
+    // PTS is no longer entered in Data Entry.
+    // Therefore Primary Value and Secondary Value remain 0.00.
     document.getElementById(
         "total-primary"
-    ).textContent =
-        primaryTotal.toFixed(2);
-
+    ).textContent = "0.00";
 
     document.getElementById(
         "total-secondary"
-    ).textContent =
-        secondaryTotal.toFixed(2);
-
+    ).textContent = "0.00";
 }
-
 
 
 // ======================================================
@@ -1127,87 +1032,34 @@ async function submitData() {
 
     for (const product of products) {
 
-        const ptsInput =
-            document.querySelector(
-                `.pts[data-product="${product.id}"]`
-            );
-
-
         const primaryInput =
             document.querySelector(
                 `.primary[data-product="${product.id}"]`
             );
-
 
         const secondaryInput =
             document.querySelector(
                 `.secondary[data-product="${product.id}"]`
             );
 
-
-        const ptsValue =
-            ptsInput.value.trim();
-
-
         const primaryValue =
             primaryInput.value.trim();
-
 
         const secondaryValue =
             secondaryInput.value.trim();
 
-
-        // PTS REQUIRED
-
-        if (ptsValue === "") {
-
-            showMessage(
-                "Please enter PTS for every product.",
-                "error"
-            );
-
-            ptsInput.focus();
-
-            return;
-
-        }
-
-
-        const pts =
-            parseFloat(ptsValue);
-
-
-        if (!Number.isFinite(pts) ||
-            pts < 0) {
-
-            showMessage(
-                "PTS must be a valid positive number.",
-                "error"
-            );
-
-            ptsInput.focus();
-
-            return;
-
-        }
-
-
         // BLANK = ZERO
-
         const primaryUnits =
             primaryValue === ""
                 ? 0
                 : Number(primaryValue);
-
 
         const secondaryUnits =
             secondaryValue === ""
                 ? 0
                 : Number(secondaryValue);
 
-
         // WHOLE NUMBER VALIDATION
-
         if (!Number.isInteger(primaryUnits)) {
 
             showMessage(
@@ -1218,9 +1070,7 @@ async function submitData() {
             primaryInput.focus();
 
             return;
-
         }
-
 
         if (!Number.isInteger(secondaryUnits)) {
 
@@ -1232,24 +1082,17 @@ async function submitData() {
             secondaryInput.focus();
 
             return;
-
         }
 
-
-        // NOTE:
-        // We deliberately DO NOT calculate/store
-        // primary_value or secondary_value here.
-        //
-        // Those columns are generated by PostgreSQL.
-
-
+        // PTS is no longer required from the user.
+        // Store 0 in the existing pts column.
         details.push({
 
             product_id:
                 product.id,
 
             pts:
-                pts,
+                0,
 
             primary_units:
                 primaryUnits,
@@ -1260,7 +1103,6 @@ async function submitData() {
         });
 
     }
-
 
 
     // ==================================================
