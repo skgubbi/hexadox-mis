@@ -48,8 +48,8 @@ td input{width:120px;text-align:right}
     <div class="card">
         <h3>Target Details</h3>
         <div class="info">
-            Select the month, year and HQ. Enter PTS and Units for each product.
-            Target Value is calculated automatically as <strong>PTS × Units</strong>.
+            Select the month, year and HQ. Enter Units for each product. PTS is optional.
+            Target Value is calculated automatically as <strong>PTS × Units</strong>. Blank PTS is treated as 0.
             Existing targets for the selected HQ and month will be loaded for editing.
         </div>
 
@@ -93,6 +93,10 @@ td input{width:120px;text-align:right}
         <h3>Product Targets</h3>
         <div id="productArea">
             <div class="loading">Select Month, Year and HQ</div>
+        </div>
+
+        <div class="info">
+            PTS is optional. If PTS is left blank, it will be saved as 0 and Target Value will be 0.00.
         </div>
 
         <div class="submit-area">
@@ -408,18 +412,21 @@ async function saveTargets() {
         // Completely blank row = no target for that product.
         if (ptsText === "" && unitsText === "") continue;
 
-        if (ptsText === "" || unitsText === "") {
+        // PTS is optional.
+        // Blank PTS is saved as 0.
+        // Units are still required when a target row is entered.
+        if (unitsText === "") {
             showMessage(
-                `Enter both PTS and Units for ${product.product_name}.`,
+                `Enter Units for ${product.product_name}.`,
                 "error"
             );
             button.disabled = false;
             button.textContent = "SAVE TARGETS";
-            ptsInput.focus();
+            unitsInput.focus();
             return;
         }
 
-        const pts = parseFloat(ptsText);
+        const pts = ptsText === "" ? 0 : parseFloat(ptsText);
         const units = parseInt(unitsText);
 
         if (!Number.isFinite(pts) || pts < 0) {
