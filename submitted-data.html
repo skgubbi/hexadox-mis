@@ -227,8 +227,6 @@
 
     </style>
 
-    <link rel="stylesheet" href="theme-yellow.css">
-
 </head>
 
 
@@ -1062,7 +1060,17 @@ function renderSubmission(
     `;
 
 
-    details.forEach(
+    // SHOW ONLY PRODUCTS WITH ACTUAL SALES.
+    // O-sale products (Primary Qty = 0 AND Secondary Qty = 0)
+    // remain stored in the database but are hidden from this view.
+    const visibleDetails = details.filter(detail => {
+        const primaryQty = Number(detail.primary_units) || 0;
+        const secondaryQty = Number(detail.secondary_units) || 0;
+
+        return primaryQty > 0 || secondaryQty > 0;
+    });
+
+    visibleDetails.forEach(
         (detail, index) => {
 
         const primaryValue =
@@ -1129,6 +1137,17 @@ function renderSubmission(
 
     });
 
+
+    if (visibleDetails.length === 0) {
+        html += `
+
+            <tr>
+                <td colspan="7" style="padding:18px; text-align:center;">
+                    No sales recorded for this submission.
+                </td>
+            </tr>
+        `;
+    }
 
     html += `
 
