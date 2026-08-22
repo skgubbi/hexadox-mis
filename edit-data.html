@@ -110,6 +110,55 @@
             background: #eeeeee;
         }
 
+        .add-brand-area {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin: 18px 0;
+            padding: 15px;
+            background: #fffdf0;
+            border: 1px solid #f0d66b;
+            border-radius: 8px;
+        }
+
+        .add-brand-area select {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .add-brand-button {
+            background: #f4c400;
+            color: #111;
+            border: none;
+            padding: 11px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .new-brand-row {
+            background: #fffdf0;
+        }
+
+        .new-badge {
+            display: inline-block;
+            margin-left: 8px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: #f4c400;
+            color: #111;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        @media (max-width: 650px) {
+            .add-brand-area {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+
         .table-container {
             overflow-x: auto;
         }
@@ -310,6 +359,7 @@
 let currentUser = null;
 let currentHeader = null;
 let details = [];
+let activeProducts = [];
 
 
 // ======================================================
@@ -600,25 +650,25 @@ async function loadSubmittedData() {
             throw detailError;
         }
 
-        // Keep products in the same alphabetical order as the
-        // Product Master / normal Data Entry list.
-        details = (rows || []).sort((a, b) => {
-            const nameA = (a.products?.product_name || "").trim();
-            const nameB = (b.products?.product_name || "").trim();
+        details = rows || [];
 
-            return nameA.localeCompare(nameB, undefined, {
-                numeric: true,
-                sensitivity: "base"
-            });
-        });
+        // Load the current Product Master so the editor can add
+        // any active brand that was not part of the original submission.
+        const {
+            data: productRows,
+            error: productError
+        } =
+            await client
+                .from("products")
+                .select("id, product_name")
+                .eq("active", true)
+                .order("product_name");
 
-        if (details.length === 0) {
-
-            document.getElementById("productArea").innerHTML =
-                '<div class="loading">No product details found for this submission.</div>';
-
-            return;
+        if (productError) {
+            throw productError;
         }
+
+        activeProducts = productRows || [];
 
         renderEditTable();
 
@@ -648,14 +698,113 @@ async function loadSubmittedData() {
 // RENDER EDIT TABLE
 // ======================================================
 
+function getDetailKey(detail) {
+    return detail.id || `new-${detail.product_id}`;
+}
+
+function renderAddBrandControl() {
+
+    const existingProductIds = new Set(
+        details.map(detail => String(detail.product_id))
+    );
+
+    const availableProducts = activeProducts.filter(
+        product => !existingProductIds.has(String(product.id))
+    );
+
+    if (availableProducts.length === 0) {
+        return `
+            <div class="info">
+                All active brands are already included in this submission.
+            </div>
+        `;
+    }
+
+    let options = '<option value="">Select brand to add</option>';
+
+    availableProducts.forEach(product => {
+        options += `
+            <option value="${product.id}">
+                ${escapeHTML(product.product_name)}
+            </option>
+        `;
+    });
+
+    return `
+        <div class="add-brand-area">
+            <select id="addBrandSelect">
+                ${options}
+            </select>
+            <button
+                type="button"
+                class="add-brand-button"
+                onclick="addBrandToEntry()">
+                + ADD BRAND
+            </button>
+        </div>
+    `;
+}
+
+function addBrandToEntry() {
+
+    const select = document.getElementById("addBrandSelect");
+    const productId = select ? select.value : "";
+
+    if (!productId) {
+        showMessage("Please select a brand to add.", "error");
+        return;
+    }
+
+    if (details.some(detail => String(detail.product_id) === String(productId))) {
+        showMessage("This brand is already in the submission.", "error");
+        return;
+    }
+
+    const product = activeProducts.find(
+        item => String(item.id) === String(productId)
+    );
+
+    if (!product) {
+        showMessage("Selected brand could not be found.", "error");
+        return;
+    }
+
+    // A temporary detail has no database id. updateData() will INSERT it.
+    details.push({
+        id: null,
+        product_id: product.id,
+        pts: 0,
+        primary_units: 0,
+        secondary_units: 0,
+        products: {
+            product_name: product.product_name
+        },
+        isNew: true
+    });
+
+    renderEditTable();
+
+    showMessage(
+        `${product.product_name} added. Enter PTS and quantities, then click UPDATE DATA.`,
+        "success"
+    );
+}
+
+// ======================================================
+// RENDER EDIT TABLE
+// ======================================================
+
 function renderEditTable() {
 
     let html = `
 
         <div class="info">
             You are editing an existing submission.
+            You can also add a brand that was not included originally.
             Leave PTS blank if it is not known. Blank PTS will be saved as 0.
         </div>
+
+        ${renderAddBrandControl()}
 
         <div class="table-container">
 
@@ -694,26 +843,30 @@ function renderEditTable() {
         const secondary =
             Number(detail.secondary_units) || 0;
 
+        const detailKey = getDetailKey(detail);
+        const isNew = !detail.id;
+
         html += `
 
-            <tr>
+            <tr class="${isNew ? "new-brand-row" : ""}">
 
                 <td>${index + 1}</td>
 
                 <td class="product-name">
                     ${escapeHTML(productName)}
+                    ${isNew ? '<span class="new-badge">NEW</span>' : ''}
                 </td>
 
                 <td>
                     <input
                         type="number"
                         class="pts"
-                        data-detail="${detail.id}"
+                        data-detail="${detailKey}"
                         min="0"
                         step="0.01"
                         value="${pts === 0 ? "" : pts}"
                         placeholder="PTS"
-                        oninput="calculateRow('${detail.id}')"
+                        oninput="calculateRow('${detailKey}')"
                     >
                 </td>
 
@@ -721,16 +874,16 @@ function renderEditTable() {
                     <input
                         type="number"
                         class="primary"
-                        data-detail="${detail.id}"
+                        data-detail="${detailKey}"
                         step="1"
                         value="${primary}"
-                        oninput="calculateRow('${detail.id}')"
+                        oninput="calculateRow('${detailKey}')"
                     >
                 </td>
 
                 <td
                     class="value-cell"
-                    id="primary-value-${detail.id}">
+                    id="primary-value-${detailKey}">
                     ${(pts * primary).toFixed(2)}
                 </td>
 
@@ -738,16 +891,16 @@ function renderEditTable() {
                     <input
                         type="number"
                         class="secondary"
-                        data-detail="${detail.id}"
+                        data-detail="${detailKey}"
                         step="1"
                         value="${secondary}"
-                        oninput="calculateRow('${detail.id}')"
+                        oninput="calculateRow('${detailKey}')"
                     >
                 </td>
 
                 <td
                     class="value-cell"
-                    id="secondary-value-${detail.id}">
+                    id="secondary-value-${detailKey}">
                     ${(pts * secondary).toFixed(2)}
                 </td>
 
@@ -806,22 +959,26 @@ function renderEditTable() {
 // CALCULATE ROW
 // ======================================================
 
-function calculateRow(detailId) {
+function calculateRow(detailKey) {
 
     const ptsInput =
         document.querySelector(
-            `.pts[data-detail="${detailId}"]`
+            `.pts[data-detail="${detailKey}"]`
         );
 
     const primaryInput =
         document.querySelector(
-            `.primary[data-detail="${detailId}"]`
+            `.primary[data-detail="${detailKey}"]`
         );
 
     const secondaryInput =
         document.querySelector(
-            `.secondary[data-detail="${detailId}"]`
+            `.secondary[data-detail="${detailKey}"]`
         );
+
+    if (!ptsInput || !primaryInput || !secondaryInput) {
+        return;
+    }
 
     const pts =
         parseFloat(ptsInput.value) || 0;
@@ -833,12 +990,12 @@ function calculateRow(detailId) {
         parseInt(secondaryInput.value) || 0;
 
     document.getElementById(
-        `primary-value-${detailId}`
+        `primary-value-${detailKey}`
     ).textContent =
         (pts * primary).toFixed(2);
 
     document.getElementById(
-        `secondary-value-${detailId}`
+        `secondary-value-${detailKey}`
     ).textContent =
         (pts * secondary).toFixed(2);
 
@@ -857,19 +1014,21 @@ function calculateTotals() {
 
     details.forEach(detail => {
 
+        const detailKey = getDetailKey(detail);
+
         const ptsInput =
             document.querySelector(
-                `.pts[data-detail="${detail.id}"]`
+                `.pts[data-detail="${detailKey}"]`
             );
 
         const primaryInput =
             document.querySelector(
-                `.primary[data-detail="${detail.id}"]`
+                `.primary[data-detail="${detailKey}"]`
             );
 
         const secondaryInput =
             document.querySelector(
-                `.secondary[data-detail="${detail.id}"]`
+                `.secondary[data-detail="${detailKey}"]`
             );
 
         if (!ptsInput || !primaryInput || !secondaryInput) {
@@ -903,7 +1062,7 @@ function calculateTotals() {
 
 async function updateData() {
 
-    if (!currentHeader || details.length === 0) {
+    if (!currentHeader) {
 
         showMessage(
             "No submitted data is loaded.",
@@ -921,24 +1080,31 @@ async function updateData() {
 
     try {
 
-        const updates = [];
+        const existingUpdates = [];
+        const newRows = [];
 
         for (const detail of details) {
 
+            const detailKey = getDetailKey(detail);
+
             const ptsInput =
                 document.querySelector(
-                    `.pts[data-detail="${detail.id}"]`
+                    `.pts[data-detail="${detailKey}"]`
                 );
 
             const primaryInput =
                 document.querySelector(
-                    `.primary[data-detail="${detail.id}"]`
+                    `.primary[data-detail="${detailKey}"]`
                 );
 
             const secondaryInput =
                 document.querySelector(
-                    `.secondary[data-detail="${detail.id}"]`
+                    `.secondary[data-detail="${detailKey}"]`
                 );
+
+            if (!ptsInput || !primaryInput || !secondaryInput) {
+                throw new Error("Unable to read one of the brand rows.");
+            }
 
             const ptsValue =
                 ptsInput.value.trim();
@@ -974,63 +1140,129 @@ async function updateData() {
                     ? 0
                     : Number(secondaryValue);
 
-            if (!Number.isInteger(primaryUnits)) {
+            if (!Number.isInteger(primaryUnits) || primaryUnits < 0) {
 
                 primaryInput.focus();
 
                 throw new Error(
-                    "Primary Quantity must be a whole number."
+                    "Primary Quantity must be a non-negative whole number."
                 );
             }
 
-            if (!Number.isInteger(secondaryUnits)) {
+            if (!Number.isInteger(secondaryUnits) || secondaryUnits < 0) {
 
                 secondaryInput.focus();
 
                 throw new Error(
-                    "Secondary Quantity must be a whole number."
+                    "Secondary Quantity must be a non-negative whole number."
                 );
             }
 
-            updates.push(
-                client
-                    .from("sales_entry_details")
-                    .update({
-                        pts: pts,
-                        primary_units: primaryUnits,
-                        secondary_units: secondaryUnits
-                    })
-                    .eq("id", detail.id)
-                    .eq("entry_id", currentHeader.id)
-            );
+            if (detail.id) {
+
+                existingUpdates.push(
+                    client
+                        .from("sales_entry_details")
+                        .update({
+                            pts: pts,
+                            primary_units: primaryUnits,
+                            secondary_units: secondaryUnits
+                        })
+                        .eq("id", detail.id)
+                        .eq("entry_id", currentHeader.id)
+                );
+
+            } else {
+
+                newRows.push({
+                    entry_id: currentHeader.id,
+                    product_id: detail.product_id,
+                    pts: pts,
+                    primary_units: primaryUnits,
+                    secondary_units: secondaryUnits
+                });
+            }
         }
 
-        const results =
-            await Promise.all(updates);
+        // Update brands that were already in the submission.
+        const updateResults =
+            await Promise.all(existingUpdates);
 
-        const failed =
-            results.find(result => result.error);
+        const failedUpdate =
+            updateResults.find(result => result.error);
 
-        if (failed && failed.error) {
-            throw failed.error;
+        if (failedUpdate && failedUpdate.error) {
+            throw failedUpdate.error;
+        }
+
+        // Insert brands added during this edit session.
+        if (newRows.length > 0) {
+
+            const {
+                data: insertedRows,
+                error: insertError
+            } =
+                await client
+                    .from("sales_entry_details")
+                    .insert(newRows)
+                    .select("id, product_id, pts, primary_units, secondary_units");
+
+            if (insertError) {
+                throw insertError;
+            }
+
+            // Convert newly inserted rows into normal existing detail rows.
+            const insertedMap = new Map(
+                (insertedRows || []).map(row => [
+                    String(row.product_id),
+                    row
+                ])
+            );
+
+            details = details.map(detail => {
+                if (detail.id) {
+                    return detail;
+                }
+
+                const inserted =
+                    insertedMap.get(String(detail.product_id));
+
+                return inserted
+                    ? {
+                        ...detail,
+                        id: inserted.id,
+                        pts: inserted.pts,
+                        primary_units: inserted.primary_units,
+                        secondary_units: inserted.secondary_units,
+                        isNew: false
+                    }
+                    : detail;
+            });
         }
 
         showMessage(
-            "Submitted data updated successfully.",
+            newRows.length > 0
+                ? "Submitted data updated and new brand(s) added successfully."
+                : "Submitted data updated successfully.",
             "success"
         );
 
         updateButton.textContent =
             "UPDATED";
 
-        // Keep the updated values on screen and prevent
-        // accidental repeated updates until the user loads
-        // the entry again.
+        // Lock the edited rows after a successful save.
         document.querySelectorAll(
-            "#productArea input"
+            "#productArea input, #productArea select"
         ).forEach(input => {
             input.disabled = true;
         });
+
+        const addBrandButton =
+            document.querySelector(".add-brand-button");
+
+        if (addBrandButton) {
+            addBrandButton.disabled = true;
+        }
 
     }
     catch (error) {
