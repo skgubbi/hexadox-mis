@@ -650,7 +650,15 @@ async function loadSubmittedData() {
             throw detailError;
         }
 
-        details = rows || [];
+        // Keep only brands that have an actual sale in the
+        // submitted entry. Zero-sale brands remain in the database,
+        // but are not shown in Edit Submitted Data.
+        details = (rows || []).filter(detail => {
+            const primary = Number(detail.primary_units) || 0;
+            const secondary = Number(detail.secondary_units) || 0;
+
+            return primary > 0 || secondary > 0;
+        });
 
         // Load the current Product Master so the editor can add
         // any active brand that was not part of the original submission.
