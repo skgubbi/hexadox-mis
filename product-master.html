@@ -183,6 +183,59 @@
             font-weight: bold;
         }
 
+        .price-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            margin-bottom: 20px;
+        }
+
+        .price-table th,
+        .price-table td {
+            text-align: left;
+        }
+
+        .price-table th:nth-child(2),
+        .price-table td:nth-child(2),
+        .price-table th:nth-child(3),
+        .price-table td:nth-child(3) {
+            text-align: right;
+        }
+
+        .price-input {
+            width: 130px;
+            text-align: right;
+            padding: 9px;
+        }
+
+        .price-save-button {
+            background: #f0c419;
+            color: #222;
+            border: none;
+            padding: 8px 13px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .price-save-button:disabled {
+            background: #999;
+            color: white;
+            cursor: not-allowed;
+        }
+
+        .price-status {
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .price-master-note {
+            margin-bottom: 15px;
+            color: #555;
+            font-size: 14px;
+        }
+
+
         @media (max-width: 700px) {
 
             .header h2 {
@@ -271,6 +324,63 @@
 
 
     <!-- ==========================================
+         MONTHLY PRICE MASTER
+    =========================================== -->
+
+    <div class="card">
+
+        <h3>Monthly Price Master</h3>
+
+        <div class="price-master-note">
+            Select a month and edit the default PTS for each product.
+            Changes here update only the selected month's price column.
+        </div>
+
+        <div class="price-controls">
+
+            <div>
+                <label for="priceMonth">Month</label>
+
+                <select id="priceMonth">
+                    <option value="4">April</option>
+                    <option value="5">May</option>
+                    <option value="6">June</option>
+                    <option value="7">July</option>
+                    <option value="8">August</option>
+                    <option value="9">September</option>
+                    <option value="10">October</option>
+                    <option value="11">November</option>
+                    <option value="12">December</option>
+                    <option value="1">January</option>
+                    <option value="2">February</option>
+                    <option value="3">March</option>
+                </select>
+
+            </div>
+
+            <div>
+                <label for="priceYear">Year</label>
+
+                <select id="priceYear">
+                    <option value="2026">2026</option>
+                    <option value="2027">2027</option>
+                </select>
+
+            </div>
+
+        </div>
+
+        <div id="priceMasterArea">
+            <div class="loading">
+                Loading monthly prices...
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <!-- ==========================================
          PRODUCT LIST
     =========================================== -->
 
@@ -331,6 +441,7 @@ async function initializePage() {
 
 
     await loadProducts();
+    await loadMonthlyPrices();
 
 }
 
@@ -519,6 +630,310 @@ async function loadProducts() {
 
 
 // ======================================================
+// MONTHLY PRICE MASTER
+// ======================================================
+
+const PRICE_COLUMNS = {
+    "4-2026": "price_apr_2026",
+    "5-2026": "price_may_2026",
+    "6-2026": "price_jun_2026",
+    "7-2026": "price_jul_2026",
+    "8-2026": "price_aug_2026",
+    "9-2026": "price_sep_2026",
+    "10-2026": "price_oct_2026",
+    "11-2026": "price_nov_2026",
+    "12-2026": "price_dec_2026",
+    "1-2027": "price_jan_2027",
+    "2-2027": "price_feb_2027",
+    "3-2027": "price_mar_2027"
+};
+
+function getSelectedPriceColumn() {
+
+    const month =
+        document.getElementById("priceMonth").value;
+
+    const year =
+        document.getElementById("priceYear").value;
+
+    return PRICE_COLUMNS[`${month}-${year}`] || null;
+}
+
+function getSelectedPricePeriodLabel() {
+
+    const month =
+        parseInt(document.getElementById("priceMonth").value);
+
+    const year =
+        parseInt(document.getElementById("priceYear").value);
+
+    const names = [
+        "",
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December"
+    ];
+
+    return `${names[month]} ${year}`;
+}
+
+async function loadMonthlyPrices() {
+
+    const area =
+        document.getElementById("priceMasterArea");
+
+    const priceColumn =
+        getSelectedPriceColumn();
+
+    if (!priceColumn) {
+
+        area.innerHTML =
+            '<div class="message error" style="display:block;">' +
+            'Invalid price period selected.' +
+            '</div>';
+
+        return;
+    }
+
+    area.innerHTML =
+        '<div class="loading">Loading prices...</div>';
+
+    const {
+        data: products,
+        error
+    } =
+        await client
+            .from("products")
+            .select(`
+                id,
+                product_name,
+                active,
+                ${priceColumn}
+            `)
+            .order("product_name");
+
+    if (error) {
+
+        console.error("PRICE LOAD ERROR:", error);
+
+        area.innerHTML =
+            '<div class="message error" style="display:block;">' +
+            escapeHTML(error.message) +
+            '</div>';
+
+        return;
+    }
+
+    if (!products || products.length === 0) {
+
+        area.innerHTML =
+            '<div class="loading">No products found.</div>';
+
+        return;
+    }
+
+    let html = `
+
+        <div class="table-container">
+
+            <table class="price-table">
+
+                <thead>
+                    <tr>
+                        <th>Product Name</th>
+                        <th>Default PTS</th>
+                        <th>Status / Save</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+    `;
+
+    products.forEach(product => {
+
+        const rawPrice =
+            product[priceColumn];
+
+        const price =
+            rawPrice === null ||
+            rawPrice === undefined
+                ? ""
+                : Number(rawPrice).toFixed(2);
+
+        html += `
+
+            <tr>
+
+                <td>
+                    ${escapeHTML(product.product_name)}
+                </td>
+
+                <td>
+
+                    <input
+                        type="number"
+                        class="price-input"
+                        min="0"
+                        step="0.01"
+                        value="${price}"
+                        data-product-id="${escapeHTML(product.id)}"
+                    >
+
+                </td>
+
+                <td>
+
+                    <button
+                        type="button"
+                        class="price-save-button"
+                        onclick="saveMonthlyPrice(
+                            '${product.id}',
+                            this
+                        )">
+                        SAVE
+                    </button>
+
+                    <span
+                        class="price-status"
+                        id="price-status-${product.id}">
+                    </span>
+
+                </td>
+
+            </tr>
+
+        `;
+    });
+
+    html += `
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    `;
+
+    area.innerHTML = html;
+}
+
+async function saveMonthlyPrice(productId, button) {
+
+    const priceColumn =
+        getSelectedPriceColumn();
+
+    if (!priceColumn) {
+
+        showMessage(
+            "Invalid price period selected.",
+            "error"
+        );
+
+        return;
+    }
+
+    const row =
+        button.closest("tr");
+
+    const input =
+        row.querySelector(".price-input");
+
+    const status =
+        row.querySelector(".price-status");
+
+    const rawValue =
+        input.value.trim();
+
+    let value = null;
+
+    if (rawValue !== "") {
+
+        value =
+            Number(rawValue);
+
+        if (!Number.isFinite(value) || value < 0) {
+
+            showMessage(
+                "PTS must be a valid number greater than or equal to 0.",
+                "error"
+            );
+
+            input.focus();
+
+            return;
+        }
+    }
+
+    button.disabled = true;
+    button.textContent = "SAVING...";
+
+    status.textContent = "";
+
+    const updateData = {};
+    updateData[priceColumn] = value;
+
+    const {
+        error
+    } =
+        await client
+            .from("products")
+            .update(updateData)
+            .eq("id", productId);
+
+    if (error) {
+
+        console.error("PRICE SAVE ERROR:", error);
+
+        showMessage(
+            "Unable to save price: " +
+            error.message,
+            "error"
+        );
+
+        button.disabled = false;
+        button.textContent = "SAVE";
+
+        return;
+    }
+
+    button.disabled = false;
+    button.textContent = "SAVE";
+
+    status.textContent = "Saved";
+    status.style.color = "#146c43";
+
+    setTimeout(() => {
+        status.textContent = "";
+    }, 2500);
+}
+
+document
+    .getElementById("priceMonth")
+    .addEventListener(
+        "change",
+        loadMonthlyPrices
+    );
+
+document
+    .getElementById("priceYear")
+    .addEventListener(
+        "change",
+        loadMonthlyPrices
+    );
+
+
+
+// ======================================================
 // ADD PRODUCT
 // ======================================================
 
@@ -695,6 +1110,7 @@ async function addProduct() {
 
 
     await loadProducts();
+    await loadMonthlyPrices();
 
 }
 
@@ -773,6 +1189,7 @@ async function toggleProduct(
 
 
     await loadProducts();
+    await loadMonthlyPrices();
 
 }
 
