@@ -27,11 +27,14 @@ td{padding:9px;border-bottom:1px solid #ddd;text-align:center;white-space:nowrap
 td.left{text-align:left}
 td.number{text-align:right;font-variant-numeric:tabular-nums}
 .total-row{font-weight:bold;background:#fff7cc;border-top:2px solid #f2c300}
+.achievement-total{background:#fff0a6;border-top:3px solid #f2c300;font-weight:bold}
+.percent{font-weight:bold;text-align:right}
 .empty,.loading{text-align:center;padding:25px;color:#666;font-weight:bold}
 .message{margin-top:15px;padding:12px;border-radius:5px;display:none;text-align:center;font-weight:bold}
 .error{background:#fdecec;color:#9b1c1c}
 .info{background:#fff7cc;border-left:4px solid #f2c300;padding:12px;margin-bottom:18px}
 .report-section{margin-top:10px}
+.achievement-note{font-size:13px;color:#666;margin:-8px 0 16px}
 @media(max-width:950px){.filter-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:560px){.filter-grid{grid-template-columns:1fr}.header h2{font-size:18px}.container{padding:0 10px}.card{padding:16px}}
 </style>
@@ -59,6 +62,12 @@ td.number{text-align:right;font-variant-numeric:tabular-nums}
     </div>
 
     <div class="card report-section">
+        <h3>Achievement Report</h3>
+        <div class="achievement-note">Target is the target entered in the Target Sheet. Primary and Secondary achievement percentages are each calculated against the applicable target. When All HQs is selected, the ABM TOTAL is calculated from consolidated target and achievement values.</div>
+        <div id="achievementReport"><div class="empty">Select filters and click GENERATE REPORT.</div></div>
+    </div>
+
+    <div class="card report-section">
         <h3>HQ-wise Month-wise Consolidated Report</h3>
         <div id="monthReport"><div class="empty">Select filters and click GENERATE REPORT.</div></div>
     </div>
@@ -81,6 +90,8 @@ let productMap=new Map();
 function escapeHTML(text){const div=document.createElement("div");div.textContent=text??"";return div.innerHTML;}
 function formatNumber(value){return (Number(value)||0).toLocaleString("en-IN",{maximumFractionDigits:2});}
 function formatValue(value){return (Number(value)||0).toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2});}
+function formatPercent(value){return (Number(value)||0).toLocaleString("en-IN",{minimumFractionDigits:1,maximumFractionDigits:1})+"%";}
+function achievementPercent(achievement,target){return Number(target)>0?(Number(achievement)/Number(target))*100:0;}
 function goHome(){window.location.href="home.html";}
 function showMessage(text,type="error"){const box=document.getElementById("message");box.className="message "+type;box.textContent=text;box.style.display="block";}
 function clearMessage(){document.getElementById("message").style.display="none";}
@@ -163,6 +174,70 @@ async function fetchDetails(entryIds){
     return rows;
 }
 
+async function fetchTargets(filters){
+    const rows=[];const pageSize=1000;let from=0;
+    while(true){
+        let query=client.from("targets").select("id,hq_id,month,year,product_id,target_pts,target_units").eq("year",filters.year);
+        if(filters.month)query=query.eq("month",filters.month);
+        if(filters.hqId)query=query.eq("hq_id",filters.hqId);
+        if(allowedHQIds.length&&!(currentProfile.role==="Admin"||currentProfile.role==="ABM"))query=query.in("hq_id",allowedHQIds);
+        if(filters.productId)query=query.eq("product_id",filters.productId);
+        const {data,error}=await query.order("hq_id").order("month").range(from,from+pageSize-1);
+        if(error)throw error;
+        rows.push(...(data||[]));
+        if(!data||data.length<pageSize)break;
+        from+=pageSize;
+    }
+    return rows;
+}
+
+function buildAchievementReport(headers,details,targets){
+    const headerMap=new Map(headers.map(h=>[h.id,h]));
+    const selectedProduct=document.getElementById("product").value;
+    const groups=new Map();
+
+    targets.forEach(t=>{
+        const key=String(t.hq_id)+"|"+String(t.month)+"|"+String(t.product_id);
+        if(!groups.has(key))groups.set(key,{hqId:t.hq_id,month:t.month,productId:t.product_id,targetUnits:0,targetValue:0,primaryUnits:0,primaryValue:0,secondaryUnits:0,secondaryValue:0});
+        const g=groups.get(key);
+        g.targetUnits+=Number(t.target_units)||0;
+        g.targetValue+=(Number(t.target_units)||0)*(Number(t.target_pts)||0);
+    });
+
+    details.forEach(d=>{
+        if(selectedProduct&&d.product_id!==selectedProduct)return;
+        const h=headerMap.get(d.entry_id);if(!h)return;
+        const key=String(h.hq_id)+"|"+String(h.month)+"|"+String(d.product_id);
+        if(!groups.has(key))groups.set(key,{hqId:h.hq_id,month:h.month,productId:d.product_id,targetUnits:0,targetValue:0,primaryUnits:0,primaryValue:0,secondaryUnits:0,secondaryValue:0});
+        const g=groups.get(key);
+        g.primaryUnits+=Number(d.primary_units)||0;
+        g.primaryValue+=Number(d.primary_value)||0;
+        g.secondaryUnits+=Number(d.secondary_units)||0;
+        g.secondaryValue+=Number(d.secondary_value)||0;
+    });
+
+    const consolidated=new Map();
+    groups.forEach(g=>{
+        const key=String(g.hqId)+"|"+String(g.month);
+        if(!consolidated.has(key))consolidated.set(key,{hqId:g.hqId,month:g.month,targetUnits:0,targetValue:0,primaryUnits:0,primaryValue:0,secondaryUnits:0,secondaryValue:0});
+        const r=consolidated.get(key);
+        r.targetUnits+=g.targetUnits;r.targetValue+=g.targetValue;r.primaryUnits+=g.primaryUnits;r.primaryValue+=g.primaryValue;r.secondaryUnits+=g.secondaryUnits;r.secondaryValue+=g.secondaryValue;
+    });
+
+    const rows=[...consolidated.values()].sort((a,b)=>String(hqMap.get(a.hqId)||"").localeCompare(String(hqMap.get(b.hqId)||""))||a.month-b.month);
+    if(!rows.length)return '<div class="empty">No target or achievement data found for the selected filters.</div>';
+
+    const totals={targetUnits:0,targetValue:0,primaryUnits:0,primaryValue:0,secondaryUnits:0,secondaryValue:0};
+    let html='<div class="table-container"><table><thead><tr><th>HQ</th><th>Month</th><th>Target Qty</th><th>Target Value</th><th>Primary Qty</th><th>Primary Value</th><th>Primary %</th><th>Secondary Qty</th><th>Secondary Value</th><th>Secondary %</th></tr></thead><tbody>';
+    rows.forEach(r=>{
+        totals.targetUnits+=r.targetUnits;totals.targetValue+=r.targetValue;totals.primaryUnits+=r.primaryUnits;totals.primaryValue+=r.primaryValue;totals.secondaryUnits+=r.secondaryUnits;totals.secondaryValue+=r.secondaryValue;
+        html+='<tr><td class="left">'+escapeHTML(hqMap.get(r.hqId)||"Unknown HQ")+'</td><td>'+MONTH_NAMES[r.month]+'</td><td class="number">'+formatNumber(r.targetUnits)+'</td><td class="number">'+formatValue(r.targetValue)+'</td><td class="number">'+formatNumber(r.primaryUnits)+'</td><td class="number">'+formatValue(r.primaryValue)+'</td><td class="percent">'+formatPercent(achievementPercent(r.primaryValue,r.targetValue))+'</td><td class="number">'+formatNumber(r.secondaryUnits)+'</td><td class="number">'+formatValue(r.secondaryValue)+'</td><td class="percent">'+formatPercent(achievementPercent(r.secondaryValue,r.targetValue))+'</td></tr>';
+    });
+    const label=isAllHQSelected()?"ABM TOTAL":"TOTAL";
+    html+='<tr class="achievement-total"><td colspan="2" class="left">'+label+'</td><td class="number">'+formatNumber(totals.targetUnits)+'</td><td class="number">'+formatValue(totals.targetValue)+'</td><td class="number">'+formatNumber(totals.primaryUnits)+'</td><td class="number">'+formatValue(totals.primaryValue)+'</td><td class="percent">'+formatPercent(achievementPercent(totals.primaryValue,totals.targetValue))+'</td><td class="number">'+formatNumber(totals.secondaryUnits)+'</td><td class="number">'+formatValue(totals.secondaryValue)+'</td><td class="percent">'+formatPercent(achievementPercent(totals.secondaryValue,totals.targetValue))+'</td></tr>';
+    return html+'</tbody></table></div>';
+}
+
 function buildMonthReport(headers,details){
     const headerMap=new Map(headers.map(h=>[h.id,h]));
     const groups=new Map();
@@ -193,7 +268,6 @@ function buildProductReport(headers,details){
     const selectedProduct=document.getElementById("product").value;
     const allHQ=isAllHQSelected();
     const groups=new Map();
-
     details.forEach(d=>{
         if(selectedProduct&&d.product_id!==selectedProduct)return;
         const h=headerMap.get(d.entry_id);if(!h)return;
@@ -202,30 +276,21 @@ function buildProductReport(headers,details){
         const g=groups.get(key);
         g.primaryUnits+=Number(d.primary_units)||0;g.secondaryUnits+=Number(d.secondary_units)||0;g.primaryValue+=Number(d.primary_value)||0;g.secondaryValue+=Number(d.secondary_value)||0;
     });
-
     const rows=[...groups.values()].sort((a,b)=>{
         if(!allHQ){const hqCompare=String(hqMap.get(a.hqId)||"").localeCompare(String(hqMap.get(b.hqId)||""));if(hqCompare!==0)return hqCompare;}
         return String(productMap.get(a.productId)||"").localeCompare(String(productMap.get(b.productId)||""));
     });
     if(!rows.length)return '<div class="empty">No data found for the selected filters.</div>';
-
     let totals={primaryUnits:0,secondaryUnits:0,primaryValue:0,secondaryValue:0};
     let html='<div class="table-container"><table><thead><tr>';
-    if(allHQ)html+='<th>Product Name</th>';
-    else html+='<th>HQ</th><th>Product Name</th>';
+    if(allHQ)html+='<th>Product Name</th>';else html+='<th>HQ</th><th>Product Name</th>';
     html+='<th>Primary Qty</th><th>Primary Value</th><th>Secondary Qty</th><th>Secondary Value</th></tr></thead><tbody>';
-
     rows.forEach(r=>{
         totals.primaryUnits+=r.primaryUnits;totals.secondaryUnits+=r.secondaryUnits;totals.primaryValue+=r.primaryValue;totals.secondaryValue+=r.secondaryValue;
-        if(allHQ){
-            html+='<tr><td class="left">'+escapeHTML(productMap.get(r.productId)||"Unknown Product")+'</td><td class="number">'+formatNumber(r.primaryUnits)+'</td><td class="number">'+formatValue(r.primaryValue)+'</td><td class="number">'+formatNumber(r.secondaryUnits)+'</td><td class="number">'+formatValue(r.secondaryValue)+'</td></tr>';
-        }else{
-            html+='<tr><td class="left">'+escapeHTML(hqMap.get(r.hqId)||"Unknown HQ")+'</td><td class="left">'+escapeHTML(productMap.get(r.productId)||"Unknown Product")+'</td><td class="number">'+formatNumber(r.primaryUnits)+'</td><td class="number">'+formatValue(r.primaryValue)+'</td><td class="number">'+formatNumber(r.secondaryUnits)+'</td><td class="number">'+formatValue(r.secondaryValue)+'</td></tr>';
-        }
+        if(allHQ)html+='<tr><td class="left">'+escapeHTML(productMap.get(r.productId)||"Unknown Product")+'</td><td class="number">'+formatNumber(r.primaryUnits)+'</td><td class="number">'+formatValue(r.primaryValue)+'</td><td class="number">'+formatNumber(r.secondaryUnits)+'</td><td class="number">'+formatValue(r.secondaryValue)+'</td></tr>';
+        else html+='<tr><td class="left">'+escapeHTML(hqMap.get(r.hqId)||"Unknown HQ")+'</td><td class="left">'+escapeHTML(productMap.get(r.productId)||"Unknown Product")+'</td><td class="number">'+formatNumber(r.primaryUnits)+'</td><td class="number">'+formatValue(r.primaryValue)+'</td><td class="number">'+formatNumber(r.secondaryUnits)+'</td><td class="number">'+formatValue(r.secondaryValue)+'</td></tr>';
     });
-
-    const label=allHQ?"ABM TOTAL":"TOTAL";
-    const colspan=allHQ?1:2;
+    const label=allHQ?"ABM TOTAL":"TOTAL";const colspan=allHQ?1:2;
     html+='<tr class="total-row"><td colspan="'+colspan+'" class="left">'+label+'</td><td class="number">'+formatNumber(totals.primaryUnits)+'</td><td class="number">'+formatValue(totals.primaryValue)+'</td><td class="number">'+formatNumber(totals.secondaryUnits)+'</td><td class="number">'+formatValue(totals.secondaryValue)+'</td></tr>';
     return html+'</tbody></table></div>';
 }
@@ -236,23 +301,29 @@ async function generateReports(){
     const month=document.getElementById("month").value;
     const year=parseInt(document.getElementById("year").value,10);
     const hqId=document.getElementById("hq").value;
+    const productId=document.getElementById("product").value;
     if(!year){showMessage("Please select a year.");return;}
     if(!allowedHQIds.length&&currentProfile.role!=="Admin"&&currentProfile.role!=="ABM"){showMessage("No HQ is assigned to this user.");return;}
     button.disabled=true;button.textContent="LOADING...";
+    document.getElementById("achievementReport").innerHTML='<div class="loading">Loading achievement report...</div>';
     document.getElementById("monthReport").innerHTML='<div class="loading">Loading report...</div>';
     document.getElementById("productReport").innerHTML='<div class="loading">Loading report...</div>';
     try{
-        const headers=await fetchAllHeaders({year,month,hqId});
+        const filters={year,month,hqId,productId};
+        const [headers,targets]=await Promise.all([fetchAllHeaders(filters),fetchTargets(filters)]);
+        const entryIds=headers.map(h=>h.id);
+        const details=entryIds.length?await fetchDetails(entryIds):[];
+        document.getElementById("achievementReport").innerHTML=buildAchievementReport(headers,details,targets);
         if(!headers.length){
             document.getElementById("monthReport").innerHTML='<div class="empty">No submitted sales data found for the selected filters.</div>';
             document.getElementById("productReport").innerHTML='<div class="empty">No submitted sales data found for the selected filters.</div>';
             return;
         }
-        const details=await fetchDetails(headers.map(h=>h.id));
         document.getElementById("monthReport").innerHTML=buildMonthReport(headers,details);
         document.getElementById("productReport").innerHTML=buildProductReport(headers,details);
     }catch(error){
         console.error("REPORT ERROR:",error);
+        document.getElementById("achievementReport").innerHTML='<div class="empty">Unable to generate achievement report.</div>';
         document.getElementById("monthReport").innerHTML='<div class="empty">Unable to generate report.</div>';
         document.getElementById("productReport").innerHTML='<div class="empty">Unable to generate report.</div>';
         showMessage(error.message||"Unable to generate report.");
