@@ -1,5 +1,5 @@
 const supabaseUrl="https://euyqvisqgxuwzcswwiqf.supabase.co";
-const supabaseKey="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV1eXF2aXNxZ3h1d3pjc3d3aXFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4NDY3OTIsImV4cCI6MjEwMjQyMjc5Mn0.9QjLUxFdiy-D92hImFtLuPcLQ81b47YK9PgyfwgjELc";
+const supabaseKey="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV1eXF2aXNxZ3h1d3pjc3d3aXFpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4NDY3OTIsImV4cCI6MjEwMjQyMjc5Mn0.9QjLUxFdiy-D92hImFtLuPcLQ81b47YK9PgyfwgjELc";
 const client=window.supabase.createClient(supabaseUrl,supabaseKey,{auth:{persistSession:true,autoRefreshToken:true}});
 
 async function getCurrentSession(){const {data,error}=await client.auth.getSession();if(error||!data.session)return{session:null,user:null,error:error||new Error("No active session.")};return{session:data.session,user:data.session.user,error:null};}
@@ -11,7 +11,7 @@ async function login(){const username=document.getElementById("username").value.
 async function logout(){try{await client.auth.signOut();}catch(error){console.error("Logout error:",error);}window.location.href="index.html";}
 
 // ==================================================
-// REPORTS: HQ-WISE PRODUCT-WISE ACHIEVEMENT %
+// REPORTS: HQ-WISE PRODUCT-WISE ACHIEVEMENT
 // ==================================================
 (function setupHQProductAchievementReport(){
     const install=()=>{
@@ -36,17 +36,18 @@ async function logout(){try{await client.auth.signOut();}catch(error){console.er
                 const {data:hqs,error:hqe}=await client.from("hqs").select("id,hq_name");if(hqe)throw hqe;
                 const {data:products,error:pe}=await client.from("products").select("id,product_name");if(pe)throw pe;
                 const hqMap=new Map((hqs||[]).map(x=>[x.id,x.hq_name])),productMap=new Map((products||[]).map(x=>[x.id,x.product_name])),hm=new Map((headers||[]).map(x=>[x.id,x]));
-                const groups=new Map();const ensure=(hq,p,m)=>{const k=String(hq)+"|"+String(m)+"|"+String(p);if(!groups.has(k))groups.set(k,{hqId:hq,month:m,productId:p,targetValue:0,primaryValue:0,secondaryValue:0});return groups.get(k);};
-                (targets||[]).forEach(t=>{const g=ensure(t.hq_id,t.product_id,t.month);g.targetValue+=(Number(t.target_units)||0)*(Number(t.target_pts)||0);});
-                details.forEach(d=>{if(productId&&d.product_id!==productId)return;const h=hm.get(d.entry_id);if(!h)return;const g=ensure(h.hq_id,d.product_id,h.month);g.primaryValue+=Number(d.primary_value)||0;g.secondaryValue+=Number(d.secondary_value)||0;});
-                const rows=[...groups.values()].sort((a,b)=>String(hqMap.get(a.hqId)||"").localeCompare(String(hqMap.get(b.hqId)||""))||String(productMap.get(a.productId)||"").localeCompare(String(productMap.get(b.productId)||""))||a.month-b.month);
+                const groups=new Map();
+                const ensure=(hq,p)=>{const k=String(hq)+"|"+String(p);if(!groups.has(k))groups.set(k,{hqId:hq,productId:p,targetQty:0,targetValue:0,primaryQty:0,primaryValue:0,secondaryQty:0,secondaryValue:0});return groups.get(k);};
+                (targets||[]).forEach(t=>{const g=ensure(t.hq_id,t.product_id);g.targetQty+=Number(t.target_units)||0;g.targetValue+=(Number(t.target_units)||0)*(Number(t.target_pts)||0);});
+                details.forEach(d=>{if(productId&&d.product_id!==productId)return;const h=hm.get(d.entry_id);if(!h)return;const g=ensure(h.hq_id,d.product_id);g.primaryQty+=Number(d.primary_units)||0;g.primaryValue+=Number(d.primary_value)||0;g.secondaryQty+=Number(d.secondary_units)||0;g.secondaryValue+=Number(d.secondary_value)||0;});
+                const rows=[...groups.values()].sort((a,b)=>String(hqMap.get(a.hqId)||"").localeCompare(String(hqMap.get(b.hqId)||""))||String(productMap.get(a.productId)||"").localeCompare(String(productMap.get(b.productId)||"")));
                 if(!rows.length){target.innerHTML='<div class="empty">No target or achievement data found for the selected filters.</div>';return;}
+                const num=(v)=>Number(v||0).toLocaleString("en-IN",{maximumFractionDigits:2});
                 const pct=(a,t)=>(Number(t)>0?Number(a)/Number(t)*100:0).toLocaleString("en-IN",{minimumFractionDigits:1,maximumFractionDigits:1})+"%";
-                const totals={targetValue:0,primaryValue:0,secondaryValue:0};
-                let html='<div class="table-container"><table><thead><tr><th>HQ</th><th>Product Name</th><th>Primary Achievement</th><th>Secondary Achievement</th></tr></thead><tbody>';
-                rows.forEach(r=>{totals.targetValue+=r.targetValue;totals.primaryValue+=r.primaryValue;totals.secondaryValue+=r.secondaryValue;html+='<tr><td class="left">'+(hqMap.get(r.hqId)||"Unknown HQ")+'</td><td class="left">'+(productMap.get(r.productId)||"Unknown Product")+'</td><td class="percent">'+pct(r.primaryValue,r.targetValue)+'</td><td class="percent">'+pct(r.secondaryValue,r.targetValue)+'</td></tr>';});
-                const label=hqId?"TOTAL":"ABM TOTAL";
-                html+='<tr class="achievement-total"><td colspan="2" class="left">'+label+'</td><td class="percent">'+pct(totals.primaryValue,totals.targetValue)+'</td><td class="percent">'+pct(totals.secondaryValue,totals.targetValue)+'</td></tr></tbody></table></div>';
+                const totals={targetQty:0,targetValue:0,primaryQty:0,primaryValue:0,secondaryQty:0,secondaryValue:0};
+                let html='<div class="table-container"><table><thead><tr><th>HQ</th><th>Product Name</th><th>Target Qty</th><th>Target Value</th><th>Pri Qty</th><th>Pri Val</th><th>Sec Qty</th><th>Sec Val</th><th>Pri Ach %</th><th>Sec Ach %</th></tr></thead><tbody>';
+                rows.forEach(r=>{Object.keys(totals).forEach(k=>totals[k]+=r[k]);html+='<tr><td class="left">'+(hqMap.get(r.hqId)||"Unknown HQ")+'</td><td class="left">'+(productMap.get(r.productId)||"Unknown Product")+'</td><td>'+num(r.targetQty)+'</td><td>'+num(r.targetValue)+'</td><td>'+num(r.primaryQty)+'</td><td>'+num(r.primaryValue)+'</td><td>'+num(r.secondaryQty)+'</td><td>'+num(r.secondaryValue)+'</td><td class="percent">'+pct(r.primaryValue,r.targetValue)+'</td><td class="percent">'+pct(r.secondaryValue,r.targetValue)+'</td></tr>';});
+                html+='<tr class="achievement-total"><td colspan="2" class="left">'+(hqId?"TOTAL":"ABM TOTAL")+'</td><td>'+num(totals.targetQty)+'</td><td>'+num(totals.targetValue)+'</td><td>'+num(totals.primaryQty)+'</td><td>'+num(totals.primaryValue)+'</td><td>'+num(totals.secondaryQty)+'</td><td>'+num(totals.secondaryValue)+'</td><td class="percent">'+pct(totals.primaryValue,totals.targetValue)+'</td><td class="percent">'+pct(totals.secondaryValue,totals.targetValue)+'</td></tr></tbody></table></div>';
                 target.innerHTML=html;
             }catch(e){console.error("HQ PRODUCT ACHIEVEMENT ERROR",e);target.innerHTML='<div class="empty">Unable to generate HQ-wise Product-wise achievement report.</div>';}})();
         };
