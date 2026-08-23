@@ -685,7 +685,22 @@ details = (rows || [])
         } =
             await client
                 .from("products")
-                .select("id, product_name")
+                .select(`
+                    id,
+                    product_name,
+                    price_apr_2026,
+                    price_may_2026,
+                    price_jun_2026,
+                    price_jul_2026,
+                    price_aug_2026,
+                    price_sep_2026,
+                    price_oct_2026,
+                    price_nov_2026,
+                    price_dec_2026,
+                    price_jan_2027,
+                    price_feb_2027,
+                    price_mar_2027
+                `)
                 .eq("active", true)
                 .order("product_name");
 
@@ -694,6 +709,10 @@ details = (rows || [])
         }
 
         activeProducts = productRows || [];
+
+        // Product Master is the source of truth for PTS.
+        // Automatically use the price column matching the selected Month + Year.
+        applyCurrentMonthPrices();
 
         renderEditTable();
 
@@ -795,10 +814,17 @@ function addBrandToEntry() {
     }
 
     // A temporary detail has no database id. updateData() will INSERT it.
+    // PTS is automatically taken from Product Master for the selected Month + Year.
+    const masterPrice = getSelectedMonthlyPrice(product);
+
     details.push({
         id: null,
         product_id: product.id,
-        pts: 0,
+        pts: (
+            masterPrice !== null &&
+            masterPrice !== undefined &&
+            masterPrice !== ""
+        ) ? Number(masterPrice) : 0,
         primary_units: 0,
         secondary_units: 0,
         products: {
@@ -819,6 +845,52 @@ function addBrandToEntry() {
 // RENDER EDIT TABLE
 // ======================================================
 
+function getMonthlyPriceColumn(month, year) {
+    const monthNames = [
+        "",
+        "jan", "feb", "mar", "apr", "may", "jun",
+        "jul", "aug", "sep", "oct", "nov", "dec"
+    ];
+
+    const monthName = monthNames[Number(month)];
+    if (!monthName || !year) return null;
+
+    return `price_${monthName}_${year}`;
+}
+
+function getSelectedMonthlyPrice(product) {
+    const month = Number(document.getElementById("month").value);
+    const year = Number(document.getElementById("year").value);
+    const column = getMonthlyPriceColumn(month, year);
+
+    if (!column || !product) return null;
+
+    return Object.prototype.hasOwnProperty.call(product, column)
+        ? product[column]
+        : null;
+}
+
+function getProductMasterById(productId) {
+    return activeProducts.find(
+        product => String(product.id) === String(productId)
+    ) || null;
+}
+
+function applyCurrentMonthPrices() {
+    details.forEach(detail => {
+        const product = getProductMasterById(detail.product_id);
+        const masterPrice = getSelectedMonthlyPrice(product);
+
+        if (
+            masterPrice !== null &&
+            masterPrice !== undefined &&
+            masterPrice !== ""
+        ) {
+            detail.pts = Number(masterPrice);
+        }
+    });
+}
+
 function renderEditTable() {
 
     let html = `
@@ -826,7 +898,7 @@ function renderEditTable() {
         <div class="info">
             You are editing an existing submission.
             You can also add a brand that was not included originally.
-            Leave PTS blank if it is not known. Blank PTS will be saved as 0.
+            PTS is automatically taken from the Product Master for the selected Month and Year.
         </div>
 
         ${renderAddBrandControl()}
@@ -889,7 +961,7 @@ function renderEditTable() {
                         data-detail="${detailKey}"
                         min="0"
                         step="0.01"
-                        value="${pts === 0 ? "" : pts}"
+                        value="${pts}"
                         placeholder="PTS"
                         oninput="calculateRow('${detailKey}')"
                     >
@@ -1104,6 +1176,21 @@ async function updateData() {
     updateButton.textContent = "UPDATING...";
 
     try {
+
+        // Refresh PTS from Product Master immediately before saving.
+        applyCurrentMonthPrices();
+
+        details.forEach(detail => {
+            const detailKey = getDetailKey(detail);
+            const ptsInput = document.querySelector(
+                `.pts[data-detail="${detailKey}"]`
+            );
+
+            if (ptsInput) {
+                ptsInput.value = detail.pts ?? 0;
+                calculateRow(detailKey);
+            }
+        });
 
         const existingUpdates = [];
         const newRows = [];
