@@ -20,13 +20,13 @@ select{width:100%;padding:10px;border:1px solid #d8d8d8;border-radius:5px;font-s
 .actions{text-align:center;margin-top:20px}
 .report-button{border:0;padding:12px 40px;border-radius:6px;font-size:16px;font-weight:bold;cursor:pointer;background:#f2c300;color:#252525}
 .report-button:disabled{background:#999;color:#fff;cursor:not-allowed}
-.report-meta{margin:0 0 15px;color:#666;font-size:13px}
 .table-container{overflow-x:auto}
 table{width:100%;border-collapse:collapse;min-width:900px}
 th{background:#252525;color:#fff;padding:11px 9px;text-align:center;white-space:nowrap}
 td{padding:9px;border-bottom:1px solid #ddd;text-align:center;white-space:nowrap}
 td.left{text-align:left}
 td.number{text-align:right;font-variant-numeric:tabular-nums}
+.total-row{font-weight:700;background:#fff7cc;border-top:2px solid #f2c300}
 .empty,.loading{text-align:center;padding:25px;color:#666;font-weight:bold}
 .message{margin-top:15px;padding:12px;border-radius:5px;display:none;text-align:center;font-weight:bold}
 .error{background:#fdecec;color:#9b1c1c}
@@ -47,32 +47,14 @@ td.number{text-align:right;font-variant-numeric:tabular-nums}
         <h3>Report Filters</h3>
         <div class="info">Primary = Primary Units / Primary Value &nbsp; | &nbsp; Secondary = Secondary Units / Secondary Value</div>
         <div class="filter-grid">
-            <div>
-                <label for="year">Year</label>
-                <select id="year"></select>
-            </div>
-            <div>
-                <label for="month">Month</label>
-                <select id="month">
-                    <option value="">All Months</option>
-                    <option value="1">January</option><option value="2">February</option><option value="3">March</option>
-                    <option value="4">April</option><option value="5">May</option><option value="6">June</option>
-                    <option value="7">July</option><option value="8">August</option><option value="9">September</option>
-                    <option value="10">October</option><option value="11">November</option><option value="12">December</option>
-                </select>
-            </div>
-            <div>
-                <label for="hq">HQ</label>
-                <select id="hq"></select>
-            </div>
-            <div>
-                <label for="product">Product Name</label>
-                <select id="product"><option value="">All Products</option></select>
-            </div>
+            <div><label for="year">Year</label><select id="year"></select></div>
+            <div><label for="month">Month</label><select id="month">
+                <option value="">All Months</option><option value="1">January</option><option value="2">February</option><option value="3">March</option><option value="4">April</option><option value="5">May</option><option value="6">June</option><option value="7">July</option><option value="8">August</option><option value="9">September</option><option value="10">October</option><option value="11">November</option><option value="12">December</option>
+            </select></div>
+            <div><label for="hq">HQ</label><select id="hq"></select></div>
+            <div><label for="product">Product Name</label><select id="product"><option value="">All Products</option></select></div>
         </div>
-        <div class="actions">
-            <button id="generateButton" class="report-button" onclick="generateReports()">GENERATE REPORT</button>
-        </div>
+        <div class="actions"><button id="generateButton" class="report-button" onclick="generateReports()">GENERATE REPORT</button></div>
         <div id="message" class="message"></div>
     </div>
 
@@ -96,39 +78,16 @@ let allowedHQIds=[];
 let hqMap=new Map();
 let productMap=new Map();
 
-function escapeHTML(text){
-    const div=document.createElement("div");
-    div.textContent=text ?? "";
-    return div.innerHTML;
-}
-
-function formatNumber(value){
-    const n=Number(value)||0;
-    return n.toLocaleString("en-IN",{maximumFractionDigits:2});
-}
-
-function formatValue(value){
-    const n=Number(value)||0;
-    return n.toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2});
-}
-
+function escapeHTML(text){const div=document.createElement("div");div.textContent=text ?? "";return div.innerHTML;}
+function formatNumber(value){return (Number(value)||0).toLocaleString("en-IN",{maximumFractionDigits:2});}
+function formatValue(value){return (Number(value)||0).toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2});}
 function goHome(){window.location.href="home.html";}
-
-function showMessage(text,type="error"){
-    const box=document.getElementById("message");
-    box.className="message "+type;
-    box.textContent=text;
-    box.style.display="block";
-}
-
+function showMessage(text,type="error"){const box=document.getElementById("message");box.className="message "+type;box.textContent=text;box.style.display="block";}
 function clearMessage(){document.getElementById("message").style.display="none";}
 
 async function initializePage(){
     const result=await getCurrentUserProfile();
-    if(result.error || !result.session || !result.profile){
-        window.location.href="index.html";
-        return;
-    }
+    if(result.error || !result.session || !result.profile){window.location.href="index.html";return;}
     currentProfile=result.profile;
     await Promise.all([loadYears(),loadHQs(),loadProducts()]);
 }
@@ -136,13 +95,7 @@ async function initializePage(){
 function loadYears(){
     const select=document.getElementById("year");
     const currentYear=new Date().getFullYear();
-    select.innerHTML="";
-    for(let year=currentYear-2;year<=currentYear+1;year++){
-        const option=document.createElement("option");
-        option.value=year;
-        option.textContent=year;
-        select.appendChild(option);
-    }
+    for(let year=currentYear-2;year<=currentYear+1;year++)select.appendChild(new Option(year,year));
     select.value=currentYear;
 }
 
@@ -150,31 +103,21 @@ async function loadHQs(){
     const select=document.getElementById("hq");
     const {data:hqs,error}=await client.from("hqs").select("id,hq_name,active").eq("active",true).order("hq_name");
     if(error){showMessage("Unable to load HQs: "+error.message);return;}
-
     hqMap=new Map((hqs||[]).map(hq=>[hq.id,hq.hq_name]));
-
     const isAllAccess=currentProfile.role==="Admin" || currentProfile.role==="ABM";
     if(isAllAccess){
         select.innerHTML='<option value="">All HQs</option>';
-        (hqs||[]).forEach(hq=>{
-            select.appendChild(new Option(hq.hq_name,hq.id));
-        });
+        (hqs||[]).forEach(hq=>select.appendChild(new Option(hq.hq_name,hq.id)));
         allowedHQIds=(hqs||[]).map(hq=>hq.id);
         return;
     }
-
     const {data:mappings,error:mappingError}=await client.from("user_hq_mapping").select("hq_id").eq("user_id",currentProfile.id);
     if(mappingError){showMessage("Unable to load HQ mapping: "+mappingError.message);return;}
-
     allowedHQIds=(mappings||[]).map(row=>row.hq_id).filter(Boolean);
     const visibleHQs=(hqs||[]).filter(hq=>allowedHQIds.includes(hq.id));
     select.innerHTML="";
-    if(visibleHQs.length===0){
-        select.innerHTML='<option value="">No HQ assigned</option>';
-        select.disabled=true;
-        return;
-    }
-    if(visibleHQs.length>1) select.appendChild(new Option("All Assigned HQs",""));
+    if(visibleHQs.length===0){select.innerHTML='<option value="">No HQ assigned</option>';select.disabled=true;return;}
+    if(visibleHQs.length>1)select.appendChild(new Option("All Assigned HQs",""));
     visibleHQs.forEach(hq=>select.appendChild(new Option(hq.hq_name,hq.id)));
 }
 
@@ -188,132 +131,89 @@ async function loadProducts(){
 }
 
 async function fetchAllHeaders(filters){
-    const rows=[];
-    const pageSize=1000;
-    let from=0;
+    const rows=[];const pageSize=1000;let from=0;
     while(true){
         let query=client.from("sales_entry_header").select("id,hq_id,month,year").eq("year",filters.year);
-        if(filters.month) query=query.eq("month",filters.month);
-        if(filters.hqId) query=query.eq("hq_id",filters.hqId);
-        if(allowedHQIds.length && !(currentProfile.role==="Admin" || currentProfile.role==="ABM")) query=query.in("hq_id",allowedHQIds);
+        if(filters.month)query=query.eq("month",filters.month);
+        if(filters.hqId)query=query.eq("hq_id",filters.hqId);
+        if(allowedHQIds.length && !(currentProfile.role==="Admin" || currentProfile.role==="ABM"))query=query.in("hq_id",allowedHQIds);
         const {data,error}=await query.order("hq_id").order("month").range(from,from+pageSize-1);
-        if(error) throw error;
-        rows.push(...(data||[]));
-        if(!data || data.length<pageSize) break;
-        from+=pageSize;
+        if(error)throw error;rows.push(...(data||[]);
+        if(!data || data.length<pageSize)break;from+=pageSize;
     }
     return rows;
 }
 
 async function fetchDetails(entryIds){
-    const rows=[];
-    const chunkSize=50;
+    const rows=[];const chunkSize=50;
     for(let i=0;i<entryIds.length;i+=chunkSize){
-        const ids=entryIds.slice(i,i+chunkSize);
-        let from=0;
-        const pageSize=1000;
+        const ids=entryIds.slice(i,i+chunkSize);let from=0;const pageSize=1000;
         while(true){
-            let query=client.from("sales_entry_details").select("entry_id,product_id,primary_units,secondary_units,primary_value,secondary_value").in("entry_id",ids).range(from,from+pageSize-1);
-            const {data,error}=await query;
-            if(error) throw error;
-            rows.push(...(data||[]));
-            if(!data || data.length<pageSize) break;
-            from+=pageSize;
+            const {data,error}=await client.from("sales_entry_details").select("entry_id,product_id,primary_units,secondary_units,primary_value,secondary_value").in("entry_id",ids).range(from,from+pageSize-1);
+            if(error)throw error;rows.push(...(data||[]));
+            if(!data || data.length<pageSize)break;from+=pageSize;
         }
     }
     return rows;
 }
 
-function buildMonthReport(headers,details){
-    const headerMap=new Map(headers.map(h=>[h.id,h]));
-    const groups=new Map();
-    details.forEach(d=>{
-        if(document.getElementById("product").value && d.product_id!==document.getElementById("product").value) return;
-        const h=headerMap.get(d.entry_id);
-        if(!h) return;
-        const key=hqKey(h.hq_id)+"|"+h.month;
-        if(!groups.has(key)) groups.set(key,{hqId:h.hq_id,month:h.month,primaryUnits:0,secondaryUnits:0,primaryValue:0,secondaryValue:0});
-        const g=groups.get(key);
-        g.primaryUnits+=Number(d.primary_units)||0;
-        g.secondaryUnits+=Number(d.secondary_units)||0;
-        g.primaryValue+=Number(d.primary_value)||0;
-        g.secondaryValue+=Number(d.secondary_value)||0;
-    });
+function getSelectedProduct(){return document.getElementById("product").value;}
+function getTotalLabel(){
+    const hqId=document.getElementById("hq").value;
+    if(!hqId && (currentProfile.role==="Admin" || currentProfile.role==="ABM"))return "ABM TOTAL";
+    return "TOTAL";
+}
 
-    const rows=[...groups.values()].sort((a,b)=>String(hqMap.get(a.hqId)||"").localeCompare(String(hqMap.get(b.hqId)||"")) || a.month-b.month);
-    if(!rows.length) return '<div class="empty">No data found for the selected filters.</div>';
-    let html='<div class="table-container"><table><thead><tr><th>HQ</th><th>Month</th><th>Primary Qty</th><th>Primary Value</th><th>Secondary Qty</th><th>Secondary Value</th></tr></thead><tbody>';
-    rows.forEach(r=>{
-        html+='<tr><td class="left">'+escapeHTML(hqMap.get(r.hqId)||"Unknown HQ")+'</td><td>'+MONTH_NAMES[r.month]+'</td><td class="number">'+formatNumber(r.primaryUnits)+'</td><td class="number">'+formatValue(r.primaryValue)+'</td><td class="number">'+formatNumber(r.secondaryUnits)+'</td><td class="number">'+formatValue(r.secondaryValue)+'</td></tr>';
+function buildMonthReport(headers,details){
+    const headerMap=new Map(headers.map(h=>[h.id,h]));const groups=new Map();
+    details.forEach(d=>{
+        if(getSelectedProduct() && d.product_id!==getSelectedProduct())return;
+        const h=headerMap.get(d.entry_id);if(!h)return;
+        const key=String(h.hq_id)+"|"+h.month;
+        if(!groups.has(key))groups.set(key,{hqId:h.hq_id,month:h.month,primaryUnits:0,secondaryUnits:0,primaryValue:0,secondaryValue:0});
+        const g=groups.get(key);g.primaryUnits+=Number(d.primary_units)||0;g.secondaryUnits+=Number(d.secondary_units)||0;g.primaryValue+=Number(d.primary_value)||0;g.secondaryValue+=Number(d.secondary_value)||0;
     });
+    const rows=[...groups.values()].sort((a,b)=>String(hqMap.get(a.hqId)||"").localeCompare(String(hqMap.get(b.hqId)||""))||a.month-b.month);
+    if(!rows.length)return '<div class="empty">No data found for the selected filters.</div>';
+    const total=rows.reduce((t,r)=>({primaryUnits:t.primaryUnits+r.primaryUnits,primaryValue:t.primaryValue+r.primaryValue,secondaryUnits:t.secondaryUnits+r.secondaryUnits,secondaryValue:t.secondaryValue+r.secondaryValue}),{primaryUnits:0,primaryValue:0,secondaryUnits:0,secondaryValue:0});
+    let html='<div class="table-container"><table><thead><tr><th>HQ</th><th>Month</th><th>Primary Qty</th><th>Primary Value</th><th>Secondary Qty</th><th>Secondary Value</th></tr></thead><tbody>';
+    rows.forEach(r=>{html+='<tr><td class="left">'+escapeHTML(hqMap.get(r.hqId)||"Unknown HQ")+'</td><td>'+MONTH_NAMES[r.month]+'</td><td class="number">'+formatNumber(r.primaryUnits)+'</td><td class="number">'+formatValue(r.primaryValue)+'</td><td class="number">'+formatNumber(r.secondaryUnits)+'</td><td class="number">'+formatValue(r.secondaryValue)+'</td></tr>';});
+    html+='<tr class="total-row"><td class="left" colspan="2">'+getTotalLabel()+'</td><td class="number">'+formatNumber(total.primaryUnits)+'</td><td class="number">'+formatValue(total.primaryValue)+'</td><td class="number">'+formatNumber(total.secondaryUnits)+'</td><td class="number">'+formatValue(total.secondaryValue)+'</td></tr>';
     return html+'</tbody></table></div>';
 }
 
 function buildProductReport(headers,details){
-    const headerMap=new Map(headers.map(h=>[h.id,h]));
-    const selectedProduct=document.getElementById("product").value;
-    const groups=new Map();
+    const headerMap=new Map(headers.map(h=>[h.id,h]));const selectedProduct=getSelectedProduct();const groups=new Map();
     details.forEach(d=>{
-        if(selectedProduct && d.product_id!==selectedProduct) return;
-        const h=headerMap.get(d.entry_id);
-        if(!h) return;
-        const key=hqKey(h.hq_id)+"|"+d.product_id;
-        if(!groups.has(key)) groups.set(key,{hqId:h.hq_id,productId:d.product_id,primaryUnits:0,secondaryUnits:0,primaryValue:0,secondaryValue:0});
-        const g=groups.get(key);
-        g.primaryUnits+=Number(d.primary_units)||0;
-        g.secondaryUnits+=Number(d.secondary_units)||0;
-        g.primaryValue+=Number(d.primary_value)||0;
-        g.secondaryValue+=Number(d.secondary_value)||0;
+        if(selectedProduct && d.product_id!==selectedProduct)return;
+        const h=headerMap.get(d.entry_id);if(!h)return;
+        const key=String(h.hq_id)+"|"+d.product_id;
+        if(!groups.has(key))groups.set(key,{hqId:h.hq_id,productId:d.product_id,primaryUnits:0,secondaryUnits:0,primaryValue:0,secondaryValue:0});
+        const g=groups.get(key);g.primaryUnits+=Number(d.primary_units)||0;g.secondaryUnits+=Number(d.secondary_units)||0;g.primaryValue+=Number(d.primary_value)||0;g.secondaryValue+=Number(d.secondary_value)||0;
     });
-
-    const rows=[...groups.values()].sort((a,b)=>String(hqMap.get(a.hqId)||"").localeCompare(String(hqMap.get(b.hqId)||"")) || String(productMap.get(a.productId)||"").localeCompare(String(productMap.get(b.productId)||"")));
-    if(!rows.length) return '<div class="empty">No data found for the selected filters.</div>';
+    const rows=[...groups.values()].sort((a,b)=>String(hqMap.get(a.hqId)||"").localeCompare(String(hqMap.get(b.hqId)||""))||String(productMap.get(a.productId)||"").localeCompare(String(productMap.get(b.productId)||"")));
+    if(!rows.length)return '<div class="empty">No data found for the selected filters.</div>';
+    const total=rows.reduce((t,r)=>({primaryUnits:t.primaryUnits+r.primaryUnits,primaryValue:t.primaryValue+r.primaryValue,secondaryUnits:t.secondaryUnits+r.secondaryUnits,secondaryValue:t.secondaryValue+r.secondaryValue}),{primaryUnits:0,primaryValue:0,secondaryUnits:0,secondaryValue:0});
     let html='<div class="table-container"><table><thead><tr><th>HQ</th><th>Product Name</th><th>Primary Qty</th><th>Primary Value</th><th>Secondary Qty</th><th>Secondary Value</th></tr></thead><tbody>';
-    rows.forEach(r=>{
-        html+='<tr><td class="left">'+escapeHTML(hqMap.get(r.hqId)||"Unknown HQ")+'</td><td class="left">'+escapeHTML(productMap.get(r.productId)||"Unknown Product")+'</td><td class="number">'+formatNumber(r.primaryUnits)+'</td><td class="number">'+formatValue(r.primaryValue)+'</td><td class="number">'+formatNumber(r.secondaryUnits)+'</td><td class="number">'+formatValue(r.secondaryValue)+'</td></tr>';
-    });
+    rows.forEach(r=>{html+='<tr><td class="left">'+escapeHTML(hqMap.get(r.hqId)||"Unknown HQ")+'</td><td class="left">'+escapeHTML(productMap.get(r.productId)||"Unknown Product")+'</td><td class="number">'+formatNumber(r.primaryUnits)+'</td><td class="number">'+formatValue(r.primaryValue)+'</td><td class="number">'+formatNumber(r.secondaryUnits)+'</td><td class="number">'+formatValue(r.secondaryValue)+'</td></tr>';});
+    html+='<tr class="total-row"><td class="left" colspan="2">'+getTotalLabel()+'</td><td class="number">'+formatNumber(total.primaryUnits)+'</td><td class="number">'+formatValue(total.primaryValue)+'</td><td class="number">'+formatNumber(total.secondaryUnits)+'</td><td class="number">'+formatValue(total.secondaryValue)+'</td></tr>';
     return html+'</tbody></table></div>';
 }
 
-function hqKey(id){return String(id||"");}
-
 async function generateReports(){
-    clearMessage();
-    const button=document.getElementById("generateButton");
-    const month=document.getElementById("month").value;
-    const year=parseInt(document.getElementById("year").value,10);
-    const hqId=document.getElementById("hq").value;
-
+    clearMessage();const button=document.getElementById("generateButton");
+    const month=document.getElementById("month").value;const year=parseInt(document.getElementById("year").value,10);const hqId=document.getElementById("hq").value;
     if(!year){showMessage("Please select a year.");return;}
-    if(!allowedHQIds.length && currentProfile.role!=="Admin" && currentProfile.role!=="ABM"){
-        showMessage("No HQ is assigned to this user.");
-        return;
-    }
-
-    button.disabled=true;
-    button.textContent="LOADING...";
-    document.getElementById("monthReport").innerHTML='<div class="loading">Loading report...</div>';
-    document.getElementById("productReport").innerHTML='<div class="loading">Loading report...</div>';
-
+    if(!allowedHQIds.length && currentProfile.role!=="Admin" && currentProfile.role!=="ABM"){showMessage("No HQ is assigned to this user.");return;}
+    button.disabled=true;button.textContent="LOADING...";document.getElementById("monthReport").innerHTML='<div class="loading">Loading report...</div>';document.getElementById("productReport").innerHTML='<div class="loading">Loading report...</div>';
     try{
         const headers=await fetchAllHeaders({year,month,hqId});
-        if(!headers.length){
-            document.getElementById("monthReport").innerHTML='<div class="empty">No submitted sales data found for the selected filters.</div>';
-            document.getElementById("productReport").innerHTML='<div class="empty">No submitted sales data found for the selected filters.</div>';
-            return;
-        }
+        if(!headers.length){document.getElementById("monthReport").innerHTML='<div class="empty">No submitted sales data found for the selected filters.</div>';document.getElementById("productReport").innerHTML='<div class="empty">No submitted sales data found for the selected filters.</div>';return;}
         const details=await fetchDetails(headers.map(h=>h.id));
         document.getElementById("monthReport").innerHTML=buildMonthReport(headers,details);
         document.getElementById("productReport").innerHTML=buildProductReport(headers,details);
-    }catch(error){
-        console.error("REPORT ERROR:",error);
-        document.getElementById("monthReport").innerHTML='<div class="empty">Unable to generate report.</div>';
-        document.getElementById("productReport").innerHTML='<div class="empty">Unable to generate report.</div>';
-        showMessage(error.message||"Unable to generate report.");
-    }finally{
-        button.disabled=false;
-        button.textContent="GENERATE REPORT";
-    }
+    }catch(error){console.error("REPORT ERROR:",error);document.getElementById("monthReport").innerHTML='<div class="empty">Unable to generate report.</div>';document.getElementById("productReport").innerHTML='<div class="empty">Unable to generate report.</div>';showMessage(error.message||"Unable to generate report.");}
+    finally{button.disabled=false;button.textContent="GENERATE REPORT";}
 }
 
 initializePage();
