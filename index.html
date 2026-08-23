@@ -192,119 +192,33 @@ button:disabled {
     </h1>
 
 
-    <!-- USERNAME -->
+    <label for="username">Username</label>
+    <input type="text" id="username" placeholder="Enter username" autocomplete="username" onkeydown="handleEnter(event)">
 
-    <label for="username">
-        Username
-    </label>
+    <label for="password">Password</label>
+    <input type="password" id="password" placeholder="Enter password" autocomplete="current-password" onkeydown="handleEnter(event)">
 
-    <input
-        type="text"
-        id="username"
-        placeholder="Enter username"
-        autocomplete="username"
-        onkeydown="handleEnter(event)"
-    >
-
-
-    <!-- PASSWORD -->
-
-    <label for="password">
-        Password
-    </label>
-
-    <input
-        type="password"
-        id="password"
-        placeholder="Enter password"
-        autocomplete="current-password"
-        onkeydown="handleEnter(event)"
-    >
-
-
-    <!-- LOGIN BUTTON -->
-
-    <button
-        id="loginButton"
-        onclick="login()"
-    >
-        LOGIN
-    </button>
-
-
-    <!-- MESSAGE -->
+    <button id="loginButton" onclick="login()">LOGIN</button>
 
     <div id="message"></div>
 
-
-    <div class="footer">
-        Hexadox MIS
-    </div>
-
+    <div class="footer">Hexadox MIS</div>
 
 </div>
 
-
-
-<!-- SUPABASE -->
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-
-<!-- OUR APP -->
-
-<script src="app.js?v=3"></script>
-
+<script src="app.js?v=4"></script>
 
 <script>
-
-// ==========================================
-// ENTER KEY LOGIN
-// ==========================================
-
 function handleEnter(event) {
-
-    if (event.key === "Enter") {
-
-        login();
-
-    }
-
+    if (event.key === "Enter") login();
 }
-
-
-// ==========================================
-// CLEAR MESSAGE WHEN USER STARTS TYPING
-// ==========================================
-
-document
-    .getElementById("username")
-    .addEventListener(
-        "input",
-        clearMessage
-    );
-
-
-document
-    .getElementById("password")
-    .addEventListener(
-        "input",
-        clearMessage
-    );
-
-
+document.getElementById("username").addEventListener("input", clearMessage);
+document.getElementById("password").addEventListener("input", clearMessage);
 function clearMessage() {
-
-    document
-        .getElementById("message")
-        .innerHTML = "";
-
+    document.getElementById("message").innerHTML = "";
 }
-
-
 </script>
 
-
 </body>
-
 </html>
