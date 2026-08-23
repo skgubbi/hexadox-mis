@@ -1,5 +1,5 @@
 const supabaseUrl="https://euyqvisqgxuwzcswwiqf.supabase.co";
-const supabaseKey="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV1eXF2aXNxZ3h1d3pjc3d3aXFpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4NDY3OTIsImV4cCI6MjEwMjQyMjc5Mn0.9QjLUxFdiy-D92hImFtLuPcLQ81b47YK9PgyfwgjELc";
+const supabaseKey="sb_publishable_4YiBchy04wWSH4K74uXNiw_F0TUILqF";
 const client=window.supabase.createClient(supabaseUrl,supabaseKey,{auth:{persistSession:true,autoRefreshToken:true}});
 
 async function getCurrentSession(){const {data,error}=await client.auth.getSession();if(error||!data.session)return{session:null,user:null,error:error||new Error("No active session.")};return{session:data.session,user:data.session.user,error:null};}
