@@ -1139,32 +1139,36 @@ async function updateData() {
             }
 
             const primaryUnits =
-                primaryValue === ""
-                    ? 0
-                    : Number(primaryValue);
+    primaryValue === ""
+        ? 0
+        : Number(primaryValue);
 
-            const secondaryUnits =
-                secondaryValue === ""
-                    ? 0
-                    : Number(secondaryValue);
+const secondaryUnits =
+    secondaryValue === ""
+        ? 0
+        : Number(secondaryValue);
 
-            if (!Number.isInteger(primaryUnits) || primaryUnits < 0) {
+// Primary Quantity must be a whole number.
+// Negative values are allowed for returns.
+if (!Number.isInteger(primaryUnits)) {
 
-                primaryInput.focus();
+    primaryInput.focus();
 
-                throw new Error(
-                    "Primary Quantity must be a non-negative whole number."
-                );
-            }
+    throw new Error(
+        "Primary Quantity must be a whole number."
+    );
+}
 
-            if (!Number.isInteger(secondaryUnits) || secondaryUnits < 0) {
+// Secondary Quantity must be a whole number.
+// Negative values are allowed for returns.
+if (!Number.isInteger(secondaryUnits)) {
 
-                secondaryInput.focus();
+    secondaryInput.focus();
 
-                throw new Error(
-                    "Secondary Quantity must be a non-negative whole number."
-                );
-            }
+    throw new Error(
+        "Secondary Quantity must be a whole number."
+    );
+}
 
             if (detail.id) {
 
