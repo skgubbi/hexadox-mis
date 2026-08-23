@@ -654,12 +654,28 @@ async function loadSubmittedData() {
 // submitted entry. Positive and negative quantities are shown.
 // Zero-sale brands remain hidden.
 
-details = (rows || []).filter(detail => {
-    const primary = Number(detail.primary_units) || 0;
-    const secondary = Number(detail.secondary_units) || 0;
+details = (rows || [])
+    .filter(detail => {
+        const primary = Number(detail.primary_units) || 0;
+        const secondary = Number(detail.secondary_units) || 0;
 
-    return primary !== 0 || secondary !== 0;
-});
+        return primary !== 0 || secondary !== 0;
+    })
+    .sort((a, b) => {
+        const nameA =
+            a.products?.product_name || "";
+
+        const nameB =
+            b.products?.product_name || "";
+
+        return nameA.localeCompare(
+            nameB,
+            undefined,
+            {
+                sensitivity: "base"
+            }
+        );
+    });
 
         // Load the current Product Master so the editor can add
         // any active brand that was not part of the original submission.
