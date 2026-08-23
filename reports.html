@@ -2,221 +2,46 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Hexadox MIS - Sales Reports</title>
 <link rel="stylesheet" href="theme-yellow.css">
 <style>
-*{box-sizing:border-box}
-body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f7f7f4;color:#222}
-.header{background:#f2c300;padding:18px 25px;display:flex;justify-content:space-between;align-items:center;gap:15px}
-.header h2{margin:0;font-size:22px;color:#252525}
-.back-button{background:#fff;border:1px solid rgba(0,0,0,.12);padding:9px 16px;border-radius:6px;cursor:pointer;font-weight:bold}
-.container{max-width:1500px;margin:25px auto;padding:0 15px}
-.card{background:#fff;padding:22px;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.08);margin-bottom:20px}
-.card h3{margin:0 0 18px;color:#252525}
-.filter-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
-label{display:block;font-weight:bold;margin-bottom:7px}
-select{width:100%;padding:10px;border:1px solid #d8d8d8;border-radius:5px;font-size:15px;background:#fff}
-.actions{text-align:center;margin-top:20px}
-.report-button{border:0;padding:12px 40px;border-radius:6px;font-size:16px;font-weight:bold;cursor:pointer;background:#f2c300;color:#252525}
-.report-button:disabled{background:#999;color:#fff;cursor:not-allowed}
-.table-container{overflow-x:auto}
-table{width:100%;border-collapse:collapse;min-width:900px}
-th{background:#252525;color:#fff;padding:11px 9px;text-align:center;white-space:nowrap}
-td{padding:9px;border-bottom:1px solid #ddd;text-align:center;white-space:nowrap}
-td.left{text-align:left}
-td.number{text-align:right;font-variant-numeric:tabular-nums}
-.total-row{font-weight:700;background:#fff7cc;border-top:2px solid #f2c300}
-.empty,.loading{text-align:center;padding:25px;color:#666;font-weight:bold}
-.message{margin-top:15px;padding:12px;border-radius:5px;display:none;text-align:center;font-weight:bold}
-.error{background:#fdecec;color:#9b1c1c}
-.info{background:#fff7cc;border-left:4px solid #f2c300;padding:12px;margin-bottom:18px}
-.report-section{margin-top:10px}
-@media(max-width:950px){.filter-grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:560px){.filter-grid{grid-template-columns:1fr}.header h2{font-size:18px}.container{padding:0 10px}.card{padding:16px}}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f7f7f4;color:#222}.header{background:#f2c300;padding:18px 25px;display:flex;justify-content:space-between;align-items:center}.header h2{margin:0;font-size:22px}.back-button{background:#fff;border:1px solid #ddd;padding:9px 16px;border-radius:6px;cursor:pointer;font-weight:bold}.container{max-width:1500px;margin:25px auto;padding:0 15px}.card{background:#fff;padding:22px;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.08);margin-bottom:20px}.card h3{margin:0 0 18px}.filter-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}label{display:block;font-weight:bold;margin-bottom:7px}select{width:100%;padding:10px;border:1px solid #d8d8d8;border-radius:5px;font-size:15px}.actions{text-align:center;margin-top:20px}.report-button{border:0;padding:12px 40px;border-radius:6px;font-size:16px;font-weight:bold;cursor:pointer;background:#f2c300}.report-button:disabled{background:#999;color:#fff}.info{background:#fff7cc;border-left:4px solid #f2c300;padding:12px;margin-bottom:18px}.table-container{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:900px}th{background:#252525;color:#fff;padding:11px 9px;text-align:center;white-space:nowrap}td{padding:9px;border-bottom:1px solid #ddd;white-space:nowrap}td.left{text-align:left}td.number{text-align:right;font-variant-numeric:tabular-nums}.total-row{font-weight:700;background:#fff7cc;border-top:2px solid #f2c300}.empty,.loading{text-align:center;padding:25px;color:#666;font-weight:bold}.message{margin-top:15px;padding:12px;border-radius:5px;display:none;text-align:center;font-weight:bold}.error{background:#fdecec;color:#9b1c1c}@media(max-width:950px){.filter-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:560px){.filter-grid{grid-template-columns:1fr}.header h2{font-size:18px}}
 </style>
 </head>
 <body>
-<div class="header">
-    <h2>HEXADOX MIS — SALES REPORTS</h2>
-    <button class="back-button" onclick="goHome()">HOME</button>
-</div>
-
+<div class="header"><h2>HEXADOX MIS — SALES REPORTS</h2><button class="back-button" onclick="goHome()">HOME</button></div>
 <div class="container">
-    <div class="card">
-        <h3>Report Filters</h3>
-        <div class="info">Primary = Primary Units / Primary Value &nbsp; | &nbsp; Secondary = Secondary Units / Secondary Value</div>
-        <div class="filter-grid">
-            <div><label for="year">Year</label><select id="year"></select></div>
-            <div><label for="month">Month</label><select id="month">
-                <option value="">All Months</option><option value="1">January</option><option value="2">February</option><option value="3">March</option><option value="4">April</option><option value="5">May</option><option value="6">June</option><option value="7">July</option><option value="8">August</option><option value="9">September</option><option value="10">October</option><option value="11">November</option><option value="12">December</option>
-            </select></div>
-            <div><label for="hq">HQ</label><select id="hq"></select></div>
-            <div><label for="product">Product Name</label><select id="product"><option value="">All Products</option></select></div>
-        </div>
-        <div class="actions"><button id="generateButton" class="report-button" onclick="generateReports()">GENERATE REPORT</button></div>
-        <div id="message" class="message"></div>
-    </div>
-
-    <div class="card report-section">
-        <h3>HQ-wise Month-wise Consolidated Report</h3>
-        <div id="monthReport"><div class="empty">Select filters and click GENERATE REPORT.</div></div>
-    </div>
-
-    <div class="card report-section">
-        <h3>HQ-wise Product-wise Consolidated Report</h3>
-        <div id="productReport"><div class="empty">Select filters and click GENERATE REPORT.</div></div>
-    </div>
+<div class="card">
+<h3>Report Filters</h3>
+<div class="info">Primary = Primary Units / Primary Value &nbsp; | &nbsp; Secondary = Secondary Units / Secondary Value</div>
+<div class="filter-grid">
+<div><label>Year</label><select id="year"></select></div>
+<div><label>Month</label><select id="month"><option value="">All Months</option><option value="1">January</option><option value="2">February</option><option value="3">March</option><option value="4">April</option><option value="5">May</option><option value="6">June</option><option value="7">July</option><option value="8">August</option><option value="9">September</option><option value="10">October</option><option value="11">November</option><option value="12">December</option></select></div>
+<div><label>HQ</label><select id="hq"></select></div>
+<div><label>Product Name</label><select id="product"><option value="">All Products</option></select></div>
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="app.js"></script>
+<div class="actions"><button id="generateButton" class="report-button" onclick="generateReports()">GENERATE REPORT</button></div><div id="message" class="message"></div>
+</div>
+<div class="card"><h3>HQ-wise Month-wise Consolidated Report</h3><div id="monthReport"><div class="empty">Select filters and click GENERATE REPORT.</div></div></div>
+<div class="card"><h3>HQ-wise Product-wise Consolidated Report</h3><div id="productReport"><div class="empty">Select filters and click GENERATE REPORT.</div></div></div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="app.js"></script>
 <script>
-const MONTH_NAMES=["","January","February","March","April","May","June","July","August","September","October","November","December"];
-let currentProfile=null;
-let allowedHQIds=[];
-let hqMap=new Map();
-let productMap=new Map();
-
-function escapeHTML(text){const div=document.createElement("div");div.textContent=text ?? "";return div.innerHTML;}
-function formatNumber(value){return (Number(value)||0).toLocaleString("en-IN",{maximumFractionDigits:2});}
-function formatValue(value){return (Number(value)||0).toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2});}
-function goHome(){window.location.href="home.html";}
-function showMessage(text,type="error"){const box=document.getElementById("message");box.className="message "+type;box.textContent=text;box.style.display="block";}
-function clearMessage(){document.getElementById("message").style.display="none";}
-
-async function initializePage(){
-    const result=await getCurrentUserProfile();
-    if(result.error || !result.session || !result.profile){window.location.href="index.html";return;}
-    currentProfile=result.profile;
-    await Promise.all([loadYears(),loadHQs(),loadProducts()]);
-}
-
-function loadYears(){
-    const select=document.getElementById("year");
-    const currentYear=new Date().getFullYear();
-    for(let year=currentYear-2;year<=currentYear+1;year++)select.appendChild(new Option(year,year));
-    select.value=currentYear;
-}
-
-async function loadHQs(){
-    const select=document.getElementById("hq");
-    const {data:hqs,error}=await client.from("hqs").select("id,hq_name,active").eq("active",true).order("hq_name");
-    if(error){showMessage("Unable to load HQs: "+error.message);return;}
-    hqMap=new Map((hqs||[]).map(hq=>[hq.id,hq.hq_name]));
-    const isAllAccess=currentProfile.role==="Admin" || currentProfile.role==="ABM";
-    if(isAllAccess){
-        select.innerHTML='<option value="">All HQs</option>';
-        (hqs||[]).forEach(hq=>select.appendChild(new Option(hq.hq_name,hq.id)));
-        allowedHQIds=(hqs||[]).map(hq=>hq.id);
-        return;
-    }
-    const {data:mappings,error:mappingError}=await client.from("user_hq_mapping").select("hq_id").eq("user_id",currentProfile.id);
-    if(mappingError){showMessage("Unable to load HQ mapping: "+mappingError.message);return;}
-    allowedHQIds=(mappings||[]).map(row=>row.hq_id).filter(Boolean);
-    const visibleHQs=(hqs||[]).filter(hq=>allowedHQIds.includes(hq.id));
-    select.innerHTML="";
-    if(visibleHQs.length===0){select.innerHTML='<option value="">No HQ assigned</option>';select.disabled=true;return;}
-    if(visibleHQs.length>1)select.appendChild(new Option("All Assigned HQs",""));
-    visibleHQs.forEach(hq=>select.appendChild(new Option(hq.hq_name,hq.id)));
-}
-
-async function loadProducts(){
-    const select=document.getElementById("product");
-    const {data:products,error}=await client.from("products").select("id,product_name,active").eq("active",true).order("product_name");
-    if(error){showMessage("Unable to load products: "+error.message);return;}
-    productMap=new Map((products||[]).map(product=>[product.id,product.product_name]));
-    select.innerHTML='<option value="">All Products</option>';
-    (products||[]).forEach(product=>select.appendChild(new Option(product.product_name,product.id)));
-}
-
-async function fetchAllHeaders(filters){
-    const rows=[];const pageSize=1000;let from=0;
-    while(true){
-        let query=client.from("sales_entry_header").select("id,hq_id,month,year").eq("year",filters.year);
-        if(filters.month)query=query.eq("month",filters.month);
-        if(filters.hqId)query=query.eq("hq_id",filters.hqId);
-        if(allowedHQIds.length && !(currentProfile.role==="Admin" || currentProfile.role==="ABM"))query=query.in("hq_id",allowedHQIds);
-        const {data,error}=await query.order("hq_id").order("month").range(from,from+pageSize-1);
-        if(error)throw error;rows.push(...(data||[]);
-        if(!data || data.length<pageSize)break;from+=pageSize;
-    }
-    return rows;
-}
-
-async function fetchDetails(entryIds){
-    const rows=[];const chunkSize=50;
-    for(let i=0;i<entryIds.length;i+=chunkSize){
-        const ids=entryIds.slice(i,i+chunkSize);let from=0;const pageSize=1000;
-        while(true){
-            const {data,error}=await client.from("sales_entry_details").select("entry_id,product_id,primary_units,secondary_units,primary_value,secondary_value").in("entry_id",ids).range(from,from+pageSize-1);
-            if(error)throw error;rows.push(...(data||[]));
-            if(!data || data.length<pageSize)break;from+=pageSize;
-        }
-    }
-    return rows;
-}
-
-function getSelectedProduct(){return document.getElementById("product").value;}
-function getTotalLabel(){
-    const hqId=document.getElementById("hq").value;
-    if(!hqId && (currentProfile.role==="Admin" || currentProfile.role==="ABM"))return "ABM TOTAL";
-    return "TOTAL";
-}
-
-function buildMonthReport(headers,details){
-    const headerMap=new Map(headers.map(h=>[h.id,h]));const groups=new Map();
-    details.forEach(d=>{
-        if(getSelectedProduct() && d.product_id!==getSelectedProduct())return;
-        const h=headerMap.get(d.entry_id);if(!h)return;
-        const key=String(h.hq_id)+"|"+h.month;
-        if(!groups.has(key))groups.set(key,{hqId:h.hq_id,month:h.month,primaryUnits:0,secondaryUnits:0,primaryValue:0,secondaryValue:0});
-        const g=groups.get(key);g.primaryUnits+=Number(d.primary_units)||0;g.secondaryUnits+=Number(d.secondary_units)||0;g.primaryValue+=Number(d.primary_value)||0;g.secondaryValue+=Number(d.secondary_value)||0;
-    });
-    const rows=[...groups.values()].sort((a,b)=>String(hqMap.get(a.hqId)||"").localeCompare(String(hqMap.get(b.hqId)||""))||a.month-b.month);
-    if(!rows.length)return '<div class="empty">No data found for the selected filters.</div>';
-    const total=rows.reduce((t,r)=>({primaryUnits:t.primaryUnits+r.primaryUnits,primaryValue:t.primaryValue+r.primaryValue,secondaryUnits:t.secondaryUnits+r.secondaryUnits,secondaryValue:t.secondaryValue+r.secondaryValue}),{primaryUnits:0,primaryValue:0,secondaryUnits:0,secondaryValue:0});
-    let html='<div class="table-container"><table><thead><tr><th>HQ</th><th>Month</th><th>Primary Qty</th><th>Primary Value</th><th>Secondary Qty</th><th>Secondary Value</th></tr></thead><tbody>';
-    rows.forEach(r=>{html+='<tr><td class="left">'+escapeHTML(hqMap.get(r.hqId)||"Unknown HQ")+'</td><td>'+MONTH_NAMES[r.month]+'</td><td class="number">'+formatNumber(r.primaryUnits)+'</td><td class="number">'+formatValue(r.primaryValue)+'</td><td class="number">'+formatNumber(r.secondaryUnits)+'</td><td class="number">'+formatValue(r.secondaryValue)+'</td></tr>';});
-    html+='<tr class="total-row"><td class="left" colspan="2">'+getTotalLabel()+'</td><td class="number">'+formatNumber(total.primaryUnits)+'</td><td class="number">'+formatValue(total.primaryValue)+'</td><td class="number">'+formatNumber(total.secondaryUnits)+'</td><td class="number">'+formatValue(total.secondaryValue)+'</td></tr>';
-    return html+'</tbody></table></div>';
-}
-
-function buildProductReport(headers,details){
-    const headerMap=new Map(headers.map(h=>[h.id,h]));const selectedProduct=getSelectedProduct();const groups=new Map();
-    details.forEach(d=>{
-        if(selectedProduct && d.product_id!==selectedProduct)return;
-        const h=headerMap.get(d.entry_id);if(!h)return;
-        const key=String(h.hq_id)+"|"+d.product_id;
-        if(!groups.has(key))groups.set(key,{hqId:h.hq_id,productId:d.product_id,primaryUnits:0,secondaryUnits:0,primaryValue:0,secondaryValue:0});
-        const g=groups.get(key);g.primaryUnits+=Number(d.primary_units)||0;g.secondaryUnits+=Number(d.secondary_units)||0;g.primaryValue+=Number(d.primary_value)||0;g.secondaryValue+=Number(d.secondary_value)||0;
-    });
-    const rows=[...groups.values()].sort((a,b)=>String(hqMap.get(a.hqId)||"").localeCompare(String(hqMap.get(b.hqId)||""))||String(productMap.get(a.productId)||"").localeCompare(String(productMap.get(b.productId)||"")));
-    if(!rows.length)return '<div class="empty">No data found for the selected filters.</div>';
-    const total=rows.reduce((t,r)=>({primaryUnits:t.primaryUnits+r.primaryUnits,primaryValue:t.primaryValue+r.primaryValue,secondaryUnits:t.secondaryUnits+r.secondaryUnits,secondaryValue:t.secondaryValue+r.secondaryValue}),{primaryUnits:0,primaryValue:0,secondaryUnits:0,secondaryValue:0});
-    let html='<div class="table-container"><table><thead><tr><th>HQ</th><th>Product Name</th><th>Primary Qty</th><th>Primary Value</th><th>Secondary Qty</th><th>Secondary Value</th></tr></thead><tbody>';
-    rows.forEach(r=>{html+='<tr><td class="left">'+escapeHTML(hqMap.get(r.hqId)||"Unknown HQ")+'</td><td class="left">'+escapeHTML(productMap.get(r.productId)||"Unknown Product")+'</td><td class="number">'+formatNumber(r.primaryUnits)+'</td><td class="number">'+formatValue(r.primaryValue)+'</td><td class="number">'+formatNumber(r.secondaryUnits)+'</td><td class="number">'+formatValue(r.secondaryValue)+'</td></tr>';});
-    html+='<tr class="total-row"><td class="left" colspan="2">'+getTotalLabel()+'</td><td class="number">'+formatNumber(total.primaryUnits)+'</td><td class="number">'+formatValue(total.primaryValue)+'</td><td class="number">'+formatNumber(total.secondaryUnits)+'</td><td class="number">'+formatValue(total.secondaryValue)+'</td></tr>';
-    return html+'</tbody></table></div>';
-}
-
-async function generateReports(){
-    clearMessage();const button=document.getElementById("generateButton");
-    const month=document.getElementById("month").value;const year=parseInt(document.getElementById("year").value,10);const hqId=document.getElementById("hq").value;
-    if(!year){showMessage("Please select a year.");return;}
-    if(!allowedHQIds.length && currentProfile.role!=="Admin" && currentProfile.role!=="ABM"){showMessage("No HQ is assigned to this user.");return;}
-    button.disabled=true;button.textContent="LOADING...";document.getElementById("monthReport").innerHTML='<div class="loading">Loading report...</div>';document.getElementById("productReport").innerHTML='<div class="loading">Loading report...</div>';
-    try{
-        const headers=await fetchAllHeaders({year,month,hqId});
-        if(!headers.length){document.getElementById("monthReport").innerHTML='<div class="empty">No submitted sales data found for the selected filters.</div>';document.getElementById("productReport").innerHTML='<div class="empty">No submitted sales data found for the selected filters.</div>';return;}
-        const details=await fetchDetails(headers.map(h=>h.id));
-        document.getElementById("monthReport").innerHTML=buildMonthReport(headers,details);
-        document.getElementById("productReport").innerHTML=buildProductReport(headers,details);
-    }catch(error){console.error("REPORT ERROR:",error);document.getElementById("monthReport").innerHTML='<div class="empty">Unable to generate report.</div>';document.getElementById("productReport").innerHTML='<div class="empty">Unable to generate report.</div>';showMessage(error.message||"Unable to generate report.");}
-    finally{button.disabled=false;button.textContent="GENERATE REPORT";}
-}
-
-initializePage();
+const MONTHS=["","January","February","March","April","May","June","July","August","September","October","November","December"];
+let profile=null,hqMap=new Map(),productMap=new Map(),allowedHQIds=[];
+function esc(x){const d=document.createElement("div");d.textContent=x??"";return d.innerHTML}function num(x){return(Number(x)||0).toLocaleString("en-IN",{maximumFractionDigits:2})}function val(x){return(Number(x)||0).toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2})}function goHome(){location.href="home.html"}function msg(t){const e=document.getElementById("message");e.className="message error";e.textContent=t;e.style.display="block"}
+async function init(){const r=await getCurrentUserProfile();if(r.error||!r.session||!r.profile){location.href="index.html";return}profile=r.profile;loadYears();await Promise.all([loadHQs(),loadProducts()])}
+function loadYears(){const s=document.getElementById("year"),y=new Date().getFullYear();for(let i=y-2;i<=y+1;i++)s.appendChild(new Option(i,i));s.value=y}
+async function loadHQs(){const s=document.getElementById("hq"),q=await client.from("hqs").select("id,hq_name").eq("active",true).order("hq_name");if(q.error){msg(q.error.message);return}const hqs=q.data||[];hqMap=new Map(hqs.map(x=>[x.id,x.hq_name]));const all=profile.role==="Admin"||profile.role==="ABM";if(all){s.innerHTML='<option value="">All HQs</option>';hqs.forEach(x=>s.appendChild(new Option(x.hq_name,x.id)));allowedHQIds=hqs.map(x=>x.id);return}const m=await client.from("user_hq_mapping").select("hq_id").eq("user_id",profile.id);if(m.error){msg(m.error.message);return}allowedHQIds=(m.data||[]).map(x=>x.hq_id);const visible=hqs.filter(x=>allowedHQIds.includes(x.id));s.innerHTML="";if(visible.length>1)s.appendChild(new Option("All Assigned HQs",""));visible.forEach(x=>s.appendChild(new Option(x.hq_name,x.id)));if(!visible.length)s.innerHTML='<option value="">No HQ assigned</option>'}
+async function loadProducts(){const s=document.getElementById("product"),q=await client.from("products").select("id,product_name").eq("active",true).order("product_name");if(q.error){msg(q.error.message);return}productMap=new Map((q.data||[]).map(x=>[x.id,x.product_name]));s.innerHTML='<option value="">All Products</option>';(q.data||[]).forEach(x=>s.appendChild(new Option(x.product_name,x.id)))}
+async function headers(year,month,hqid){let out=[],from=0;while(true){let q=client.from("sales_entry_header").select("id,hq_id,month,year").eq("year",year);if(month)q=q.eq("month",month);if(hqid)q=q.eq("hq_id",hqid);if(profile.role!=="Admin"&&profile.role!=="ABM")q=q.in("hq_id",allowedHQIds);const r=await q.order("hq_id").order("month").range(from,from+999);if(r.error)throw r.error;out.push(...(r.data||[]));if(!r.data||r.data.length<1000)break;from+=1000}return out}
+async function details(ids){let out=[];for(let i=0;i<ids.length;i+=50){const r=await client.from("sales_entry_details").select("entry_id,product_id,primary_units,secondary_units,primary_value,secondary_value").in("entry_id",ids.slice(i,i+50));if(r.error)throw r.error;out.push(...(r.data||[]))}return out}
+function totalLabel(){return !document.getElementById("hq").value&&(profile.role==="Admin"||profile.role==="ABM")?"ABM TOTAL":"TOTAL"}
+function aggregate(hs,ds,mode){const hm=new Map(hs.map(h=>[h.id,h])),pm=document.getElementById("product").value,g=new Map();ds.forEach(d=>{if(pm&&d.product_id!==pm)return;const h=hm.get(d.entry_id);if(!h)return;const key=mode==="month"?h.hq_id+"|"+h.month:h.hq_id+"|"+d.product_id;if(!g.has(key))g.set(key,{hq:h.hq_id,month:h.month,product:d.product_id,pu:0,pv:0,su:0,sv:0});const x=g.get(key);x.pu+=+d.primary_units||0;x.pv+=+d.primary_value||0;x.su+=+d.secondary_units||0;x.sv+=+d.secondary_value||0});return[...g.values()]}
+function table(rows,mode){if(!rows.length)return'<div class="empty">No data found for the selected filters.</div>';rows.sort((a,b)=>String(hqMap.get(a.hq)||"").localeCompare(String(hqMap.get(b.hq)||""))||(mode==="month"?a.month-b.month:String(productMap.get(a.product)||"").localeCompare(String(productMap.get(b.product)||""))));let t=rows.reduce((a,x)=>({pu:a.pu+x.pu,pv:a.pv+x.pv,su:a.su+x.su,sv:a.sv+x.sv}),{pu:0,pv:0,su:0,sv:0});let html=mode==="month"?'<div class="table-container"><table><thead><tr><th>HQ</th><th>Month</th><th>Primary Qty</th><th>Primary Value</th><th>Secondary Qty</th><th>Secondary Value</th></tr></thead><tbody>':'<div class="table-container"><table><thead><tr><th>HQ</th><th>Product Name</th><th>Primary Qty</th><th>Primary Value</th><th>Secondary Qty</th><th>Secondary Value</th></tr></thead><tbody>';rows.forEach(x=>{html+='<tr><td class="left">'+esc(hqMap.get(x.hq)||"Unknown HQ")+'</td><td class="left">'+esc(mode==="month"?MONTHS[x.month]:productMap.get(x.product)||"Unknown Product")+'</td><td class="number">'+num(x.pu)+'</td><td class="number">'+val(x.pv)+'</td><td class="number">'+num(x.su)+'</td><td class="number">'+val(x.sv)+'</td></tr>'});html+='<tr class="total-row"><td class="left" colspan="2">'+totalLabel()+'</td><td class="number">'+num(t.pu)+'</td><td class="number">'+val(t.pv)+'</td><td class="number">'+num(t.su)+'</td><td class="number">'+val(t.sv)+'</td></tr></tbody></table></div>';return html}
+async function generateReports(){document.getElementById("message").style.display="none";const b=document.getElementById("generateButton"),year=+document.getElementById("year").value,month=document.getElementById("month").value,hqid=document.getElementById("hq").value;b.disabled=true;b.textContent="LOADING...";try{const hs=await headers(year,month,hqid);if(!hs.length){document.getElementById("monthReport").innerHTML=document.getElementById("productReport").innerHTML='<div class="empty">No submitted sales data found for the selected filters.</div>';return}const ds=await details(hs.map(x=>x.id));document.getElementById("monthReport").innerHTML=table(aggregate(hs,ds,"month"),"month");document.getElementById("productReport").innerHTML=table(aggregate(hs,ds,"product"),"product")}catch(e){console.error(e);msg(e.message||"Unable to generate report.")}finally{b.disabled=false;b.textContent="GENERATE REPORT"}}
+init();
 </script>
 </body>
 </html>
