@@ -342,6 +342,7 @@
     <div class="card">
 
         <h3>Product Data</h3>
+        <div class="entry-summary">PTS is automatically loaded from the selected month\'s Product Price Master. You can edit PTS for this transaction if required.</div>
 
         <div id="productArea">
 
@@ -680,23 +681,38 @@ async function loadProducts() {
     const productArea =
         document.getElementById("productArea");
 
-
     productArea.innerHTML =
         '<div class="loading">Loading products...</div>';
 
-
+    /*
+     * Load all monthly price columns from Supabase.
+     * The selected Month + Year determines which price is used
+     * as the default PTS for each product.
+     */
     const { data, error } =
         await client
             .from("products")
-            .select("id, product_name")
+            .select(`
+                id,
+                product_name,
+                price_apr_2026,
+                price_may_2026,
+                price_jun_2026,
+                price_jul_2026,
+                price_aug_2026,
+                price_sep_2026,
+                price_oct_2026,
+                price_nov_2026,
+                price_dec_2026,
+                price_jan_2027,
+                price_feb_2027,
+                price_mar_2027
+            `)
             .eq("active", true)
             .order("product_name");
 
-
     console.log("PRODUCTS:", data);
-
     console.log("PRODUCT ERROR:", error);
-
 
     if (error) {
 
@@ -707,13 +723,20 @@ async function loadProducts() {
         );
 
         return;
-
     }
 
+    const month =
+        parseInt(document.getElementById("month").value);
+
+    const year =
+        parseInt(document.getElementById("year").value);
 
     products =
-        data || [];
-
+        (data || []).map(product => ({
+            ...product,
+            monthly_price:
+                getMonthlyPrice(product, month, year)
+        }));
 
     if (products.length === 0) {
 
@@ -721,12 +744,44 @@ async function loadProducts() {
             '<div class="loading">No active products found.</div>';
 
         return;
-
     }
-
-
 }
 
+
+
+/*
+ * Return the default PTS for the selected Month + Year.
+ * Supported price master period: April 2026 to March 2027.
+ *
+ * If a month outside that price-master period is selected,
+ * the function returns null and the PTS field remains editable.
+ */
+function getMonthlyPrice(product, month, year) {
+
+    const priceColumns = {
+        "4-2026": "price_apr_2026",
+        "5-2026": "price_may_2026",
+        "6-2026": "price_jun_2026",
+        "7-2026": "price_jul_2026",
+        "8-2026": "price_aug_2026",
+        "9-2026": "price_sep_2026",
+        "10-2026": "price_oct_2026",
+        "11-2026": "price_nov_2026",
+        "12-2026": "price_dec_2026",
+        "1-2027": "price_jan_2027",
+        "2-2027": "price_feb_2027",
+        "3-2027": "price_mar_2027"
+    };
+
+    const column =
+        priceColumns[`${month}-${year}`];
+
+    if (!column) {
+        return null;
+    }
+
+    return product[column];
+}
 
 
 // ======================================================
@@ -779,33 +834,152 @@ function renderProductTable() {
 }
 
 function addProductRow() {
-    const tbody = document.getElementById("productRows");
+
+    const tbody =
+        document.getElementById("productRows");
+
     if (!tbody) return;
-    const row = document.createElement("tr");
-    row.className = "product-entry-row";
+
+    const row =
+        document.createElement("tr");
+
+    row.className =
+        "product-entry-row";
+
     row.innerHTML = `
         <td></td>
-        <td><select class="product-select" onchange="productChanged(this)">
-            <option value="">Select Product</option>
-            ${products.map(product => `<option value="${escapeHTML(product.id)}">${escapeHTML(product.product_name)}</option>`).join("")}
-        </select></td>
-        <td><input type="number" class="pts" min="0" step="0.01" placeholder="PTS" oninput="calculateEntryRow(this.closest('tr'))"></td>
-        <td><input type="number" class="primary" step="1" placeholder="0" oninput="calculateEntryRow(this.closest('tr'))"></td>
-        <td class="value-cell primary-value">0.00</td>
-        <td><input type="number" class="secondary" step="1" placeholder="0" oninput="calculateEntryRow(this.closest('tr'))"></td>
-        <td class="value-cell secondary-value">0.00</td>
-        <td><button type="button" class="remove-row-button" onclick="removeProductRow(this)">REMOVE</button></td>`;
+
+        <td>
+            <select
+                class="product-select"
+                onchange="productChanged(this)">
+                <option value="">Select Product</option>
+
+                ${products.map(product => `
+                    <option value="${escapeHTML(product.id)}">
+                        ${escapeHTML(product.product_name)}
+                    </option>
+                `).join("")}
+
+            </select>
+        </td>
+
+        <td>
+            <input
+                type="number"
+                class="pts"
+                min="0"
+                step="0.01"
+                placeholder="PTS"
+                oninput="calculateEntryRow(this.closest('tr'))">
+        </td>
+
+        <td>
+            <input
+                type="number"
+                class="primary"
+                step="1"
+                placeholder="0"
+                oninput="calculateEntryRow(this.closest('tr'))">
+        </td>
+
+        <td class="value-cell primary-value">
+            0.00
+        </td>
+
+        <td>
+            <input
+                type="number"
+                class="secondary"
+                step="1"
+                placeholder="0"
+                oninput="calculateEntryRow(this.closest('tr'))">
+        </td>
+
+        <td class="value-cell secondary-value">
+            0.00
+        </td>
+
+        <td>
+            <button
+                type="button"
+                class="remove-row-button"
+                onclick="removeProductRow(this)">
+                REMOVE
+            </button>
+        </td>
+    `;
+
     tbody.appendChild(row);
+
     updateRowNumbers();
 }
 
 function productChanged(select) {
-    const selectedId = select.value;
-    if (selectedId && [...document.querySelectorAll(".product-select")].some(other => other !== select && other.value === selectedId)) {
-        showMessage("This product is already selected. Please choose another product.", "error");
+
+    const selectedId =
+        select.value;
+
+    const row =
+        select.closest("tr");
+
+    if (
+        selectedId &&
+        [...document.querySelectorAll(".product-select")]
+            .some(other =>
+                other !== select &&
+                other.value === selectedId
+            )
+    ) {
+
+        showMessage(
+            "This product is already selected. Please choose another product.",
+            "error"
+        );
+
         select.value = "";
+
+        row.querySelector(".pts").value = "";
+
+        calculateEntryRow(row);
+
+        return;
     }
-    calculateEntryRow(select.closest("tr"));
+
+    const product =
+        products.find(
+            p => p.id === selectedId
+        );
+
+    const ptsInput =
+        row.querySelector(".pts");
+
+    /*
+     * Monthly master price becomes the DEFAULT PTS.
+     * The input remains editable for a transaction-specific override.
+     */
+    if (product) {
+
+        const defaultPrice =
+            product.monthly_price;
+
+        if (
+            defaultPrice !== null &&
+            defaultPrice !== undefined &&
+            defaultPrice !== ""
+        ) {
+            ptsInput.value =
+                Number(defaultPrice).toFixed(2);
+        } else {
+            ptsInput.value = "";
+        }
+
+    } else {
+
+        ptsInput.value = "";
+    }
+
+    calculateEntryRow(row);
 }
 
 function removeProductRow(button) {
