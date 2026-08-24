@@ -45,57 +45,57 @@ select:disabled { background: #EEEEEE !important; }
 
 /* =========================================================
    DASHBOARD LAYOUT
-   Secondary Achievement by Month + Component Sales side-by-side.
-   Product-wise Secondary Achievement stays below both.
+   Scope this grid ONLY to the dashboard. The previous version
+   applied .container grid rules globally and affected other MIS pages.
    ========================================================= */
 @media (min-width: 768px) {
-    .container {
+    .container:has(#progressChart) {
         display: grid !important;
         grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
         gap: 18px !important;
     }
 
-    .container > .filters,
-    .container > .period-note,
-    .container > .kpis,
-    .container > .grid2 {
+    .container:has(#progressChart) > .filters,
+    .container:has(#progressChart) > .period-note,
+    .container:has(#progressChart) > .kpis,
+    .container:has(#progressChart) > .grid2 {
         grid-column: 1 / -1 !important;
     }
 
-    .container > .card:nth-child(5) {
+    .container:has(#progressChart) > .card:nth-child(5) {
         grid-column: 1 !important;
         grid-row: 5 !important;
     }
 
-    .container > .card:nth-child(7) {
+    .container:has(#progressChart) > .card:nth-child(7) {
         grid-column: 2 !important;
         grid-row: 5 !important;
     }
 
-    .container > .card:nth-child(6) {
+    .container:has(#progressChart) > .card:nth-child(6) {
         grid-column: 1 / -1 !important;
         grid-row: 6 !important;
     }
 }
 
 @media (max-width: 767px) {
-    .container {
+    .container:has(#progressChart) {
         display: grid !important;
         grid-template-columns: 1fr !important;
         gap: 18px !important;
     }
 
-    .container > .card:nth-child(5) {
+    .container:has(#progressChart) > .card:nth-child(5) {
         grid-column: 1 !important;
         grid-row: 5 !important;
     }
 
-    .container > .card:nth-child(7) {
+    .container:has(#progressChart) > .card:nth-child(7) {
         grid-column: 1 !important;
         grid-row: 6 !important;
     }
 
-    .container > .card:nth-child(6) {
+    .container:has(#progressChart) > .card:nth-child(6) {
         grid-column: 1 !important;
         grid-row: 7 !important;
     }
@@ -103,7 +103,6 @@ select:disabled { background: #EEEEEE !important; }
 
 /* =========================================================
    EDIT SUBMITTED DATA — FILTERS ABOVE PRODUCT DATA
-   The dashboard grid above is intentionally scoped away from this page.
    ========================================================= */
 .container:has(#productArea) {
     display: block !important;
