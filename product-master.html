@@ -376,15 +376,6 @@
             </div>
         </div>
 
-        <div class="save-area">
-            <button type="button"
-                    id="syncPeriodButton"
-                    class="price-save-button"
-                    onclick="syncSelectedPeriodPrices()">
-                SYNC ALL SUBMITTED DATA FOR THIS PERIOD
-            </button>
-        </div>
-
     </div>
 
 
@@ -837,188 +828,27 @@ async function loadMonthlyPrices() {
 }
 
 async function saveMonthlyPrice(productId, button) {
-
-    const priceColumn =
-        getSelectedPriceColumn();
-
-    if (!priceColumn) {
-
-        showMessage(
-            "Invalid price period selected.",
-            "error"
-        );
-
-        return;
+    const priceColumn = getSelectedPriceColumn();
+    if (!priceColumn) { showMessage("Invalid price period selected.", "error"); return; }
+    const input = button.closest("tr").querySelector(".price-input");
+    const status = button.closest("tr").querySelector(".price-status");
+    const rawValue = input.value.trim();
+    const value = rawValue === "" ? null : Number(rawValue);
+    if (value !== null && (!Number.isFinite(value) || value < 0)) {
+        showMessage("PTS must be a valid number greater than or equal to 0.", "error");
+        input.focus(); return;
     }
-
-    const row =
-        button.closest("tr");
-
-    const input =
-        row.querySelector(".price-input");
-
-    const status =
-        row.querySelector(".price-status");
-
-    const rawValue =
-        input.value.trim();
-
-    let value = null;
-
-    if (rawValue !== "") {
-
-        value =
-            Number(rawValue);
-
-        if (!Number.isFinite(value) || value < 0) {
-
-            showMessage(
-                "PTS must be a valid number greater than or equal to 0.",
-                "error"
-            );
-
-            input.focus();
-
-            return;
-        }
-    }
-
-    button.disabled = true;
-    button.textContent = "SAVING...";
-
-    status.textContent = "";
-
-    const updateData = {};
-    updateData[priceColumn] = value;
-
-    const {
-        error
-    } =
-        await client
-            .from("products")
-            .update(updateData)
-            .eq("id", productId);
-
+    button.disabled = true; button.textContent = "SAVING..."; status.textContent = "";
+    const updateData = {}; updateData[priceColumn] = value;
+    const { error } = await client.from("products").update(updateData).eq("id", productId);
     if (error) {
-
-        console.error("PRICE SAVE ERROR:", error);
-
-        showMessage(
-            "Unable to save price: " +
-            error.message,
-            "error"
-        );
-
-        button.disabled = false;
-        button.textContent = "SAVE";
-
-        return;
+        showMessage("Unable to save price: " + error.message, "error");
+        button.disabled = false; button.textContent = "SAVE"; return;
     }
-
-    // Keep already-submitted target sheets aligned with this period's
-    // master PTS. Target value is recalculated by the existing target logic.
-    const month =
-        Number(document.getElementById("priceMonth").value);
-
-    const year =
-        Number(document.getElementById("priceYear").value);
-
-    const {
-        error: targetUpdateError
-    } =
-        await client
-            .from("targets")
-            .update({
-                target_pts: value ?? 0
-            })
-            .eq("product_id", productId)
-            .eq("month", month)
-            .eq("year", year);
-
-    if (targetUpdateError) {
-        console.error(
-            "TARGET PRICE SYNC ERROR:",
-            targetUpdateError
-        );
-
-        showMessage(
-            "Price saved, but submitted targets could not be updated: " +
-            targetUpdateError.message,
-            "error"
-        );
-
-        button.disabled = false;
-        button.textContent = "SAVE";
-
-        return;
-    }
-
-    // Submitted sales also store a PTS snapshot. Update every sales
-    // entry in the selected period, in chunks to support a large entry set.
-    const {
-        data: salesHeaders,
-        error: salesHeaderError
-    } =
-        await client
-            .from("sales_entry_header")
-            .select("id")
-            .eq("month", month)
-            .eq("year", year);
-
-    if (salesHeaderError) {
-        showMessage(
-            "Price and submitted targets saved, but sales could not be found: " +
-            salesHeaderError.message,
-            "error"
-        );
-
-        button.disabled = false;
-        button.textContent = "SAVE";
-
-        return;
-    }
-
-    const entryIds =
-        (salesHeaders || []).map(header => header.id);
-
-    for (let i = 0; i < entryIds.length; i += 500) {
-        const {
-            error: salesUpdateError
-        } =
-            await client
-                .from("sales_entry_details")
-                .update({
-                    pts: value ?? 0
-                })
-                .eq("product_id", productId)
-                .in("entry_id", entryIds.slice(i, i + 500));
-
-        if (salesUpdateError) {
-            showMessage(
-                "Price and submitted targets saved, but sales could not be updated: " +
-                salesUpdateError.message,
-                "error"
-            );
-
-            button.disabled = false;
-            button.textContent = "SAVE";
-
-            return;
-        }
-    }
-
-    button.disabled = false;
-    button.textContent = "SAVE";
-
-    status.textContent =
-        "Saved — submitted targets and sales updated";
-    status.style.color = "#146c43";
-
-    setTimeout(() => {
-        status.textContent = "";
-    }, 2500);
+    button.disabled = false; button.textContent = "SAVE";
+    status.textContent = "Saved"; status.style.color = "#146c43";
+    setTimeout(() => { status.textContent = ""; }, 2500);
 }
-
 document
     .getElementById("priceMonth")
     .addEventListener(
@@ -1035,67 +865,6 @@ document
 
 
 
-
-async function syncSelectedPeriodPrices() {
-    const priceColumn = getSelectedPriceColumn();
-    const month = Number(document.getElementById("priceMonth").value);
-    const year = Number(document.getElementById("priceYear").value);
-    const button = document.getElementById("syncPeriodButton");
-
-    if (!priceColumn) {
-        showMessage("Invalid price period selected.", "error");
-        return;
-    }
-
-    button.disabled = true;
-    button.textContent = "SYNCING...";
-
-    try {
-        const { data: products, error: productError } =
-            await client.from("products").select("id," + priceColumn);
-        if (productError) throw productError;
-
-        const { data: salesHeaders, error: headerError } =
-            await client.from("sales_entry_header").select("id")
-                .eq("month", month).eq("year", year);
-        if (headerError) throw headerError;
-
-        const entryIds = (salesHeaders || []).map(header => header.id);
-
-        for (const product of products || []) {
-            const pts = Number(product[priceColumn]) || 0;
-            const { error: targetError } =
-                await client.from("targets").update({ target_pts: pts })
-                    .eq("product_id", product.id)
-                    .eq("month", month).eq("year", year);
-            if (targetError) throw targetError;
-
-            for (let i = 0; i < entryIds.length; i += 500) {
-                const { error: salesError } =
-                    await client.from("sales_entry_details").update({ pts })
-                        .eq("product_id", product.id)
-                        .in("entry_id", entryIds.slice(i, i + 500));
-                if (salesError) throw salesError;
-            }
-        }
-
-        showMessage(
-            "All submitted targets and sales for " +
-            getSelectedPricePeriodLabel() +
-            " have been synchronized.",
-            "success"
-        );
-    } catch (error) {
-        console.error("PERIOD PRICE SYNC ERROR:", error);
-        showMessage(
-            "Unable to synchronize submitted data: " + error.message,
-            "error"
-        );
-    } finally {
-        button.disabled = false;
-        button.textContent = "SYNC ALL SUBMITTED DATA FOR THIS PERIOD";
-    }
-}
 
 // ======================================================
 // ADD PRODUCT
