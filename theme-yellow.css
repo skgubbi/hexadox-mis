@@ -43,7 +43,11 @@ select:disabled { background: #EEEEEE !important; }
 .user-role, .user-hq { color: var(--hx-muted) !important; }
 .footer { color: #777 !important; }
 
-/* Dashboard: put Secondary Achievement and Component Sales side-by-side */
+/* =========================================================
+   DASHBOARD LAYOUT
+   Secondary Achievement by Month + Component Sales side-by-side.
+   Product-wise Secondary Achievement stays below both.
+   ========================================================= */
 @media (min-width: 768px) {
     .container {
         display: grid !important;
@@ -58,25 +62,46 @@ select:disabled { background: #EEEEEE !important; }
         grid-column: 1 / -1 !important;
     }
 
-    /* Child 5 = Secondary Achievement by Month */
+    /* Secondary Achievement by Month */
     .container > .card:nth-child(5) {
         grid-column: 1 !important;
         grid-row: 5 !important;
     }
 
-    /* Child 6 = Product-wise Secondary Achievement */
-    .container > .card:nth-child(6) {
-        grid-column: 1 / -1 !important;
-        grid-row: 6 !important;
-    }
-
-    /* Child 7 = Component Sales */
+    /* Component Sales — immediately beside Secondary Achievement */
     .container > .card:nth-child(7) {
         grid-column: 2 !important;
         grid-row: 5 !important;
     }
+
+    /* Product-wise Secondary Achievement below both */
+    .container > .card:nth-child(6) {
+        grid-column: 1 / -1 !important;
+        grid-row: 6 !important;
+    }
 }
 
+/* Mobile: keep Component Sales immediately after Secondary Achievement,
+   then show Product-wise Secondary Achievement. */
 @media (max-width: 767px) {
-    .container { display: block !important; }
+    .container {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 18px !important;
+    }
+
+    .container > .card:nth-child(5) {
+        grid-column: 1 !important;
+        grid-row: 5 !important;
+    }
+
+    .container > .card:nth-child(7) {
+        grid-column: 1 !important;
+        grid-row: 6 !important;
+    }
+
+    .container > .card:nth-child(6) {
+        grid-column: 1 !important;
+        grid-row: 7 !important;
+    }
 }
