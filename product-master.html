@@ -376,6 +376,15 @@
             </div>
         </div>
 
+        <div class="save-area">
+            <button type="button"
+                    id="syncPeriodButton"
+                    class="price-save-button"
+                    onclick="syncSelectedPeriodPrices()">
+                SYNC ALL SUBMITTED DATA FOR THIS PERIOD
+            </button>
+        </div>
+
     </div>
 
 
@@ -1025,6 +1034,68 @@ document
     );
 
 
+
+
+async function syncSelectedPeriodPrices() {
+    const priceColumn = getSelectedPriceColumn();
+    const month = Number(document.getElementById("priceMonth").value);
+    const year = Number(document.getElementById("priceYear").value);
+    const button = document.getElementById("syncPeriodButton");
+
+    if (!priceColumn) {
+        showMessage("Invalid price period selected.", "error");
+        return;
+    }
+
+    button.disabled = true;
+    button.textContent = "SYNCING...";
+
+    try {
+        const { data: products, error: productError } =
+            await client.from("products").select("id," + priceColumn);
+        if (productError) throw productError;
+
+        const { data: salesHeaders, error: headerError } =
+            await client.from("sales_entry_header").select("id")
+                .eq("month", month).eq("year", year);
+        if (headerError) throw headerError;
+
+        const entryIds = (salesHeaders || []).map(header => header.id);
+
+        for (const product of products || []) {
+            const pts = Number(product[priceColumn]) || 0;
+            const { error: targetError } =
+                await client.from("targets").update({ target_pts: pts })
+                    .eq("product_id", product.id)
+                    .eq("month", month).eq("year", year);
+            if (targetError) throw targetError;
+
+            for (let i = 0; i < entryIds.length; i += 500) {
+                const { error: salesError } =
+                    await client.from("sales_entry_details").update({ pts })
+                        .eq("product_id", product.id)
+                        .in("entry_id", entryIds.slice(i, i + 500));
+                if (salesError) throw salesError;
+            }
+        }
+
+        showMessage(
+            "All submitted targets and sales for " +
+            getSelectedPricePeriodLabel() +
+            " have been synchronized.",
+            "success"
+        );
+    } catch (error) {
+        console.error("PERIOD PRICE SYNC ERROR:", error);
+        showMessage(
+            "Unable to synchronize submitted data: " + error.message,
+            "error"
+        );
+    } finally {
+        button.disabled = false;
+        button.textContent = "SYNC ALL SUBMITTED DATA FOR THIS PERIOD";
+    }
+}
 
 // ======================================================
 // ADD PRODUCT
