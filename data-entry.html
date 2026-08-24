@@ -731,12 +731,7 @@ async function loadProducts() {
     const year =
         parseInt(document.getElementById("year").value);
 
-    products =
-        (data || []).map(product => ({
-            ...product,
-            monthly_price:
-                getMonthlyPrice(product, month, year)
-        }));
+    products = data || [];
 
     if (products.length === 0) {
 
@@ -946,39 +941,9 @@ function productChanged(select) {
         return;
     }
 
-    const product =
-        products.find(
-            p => p.id === selectedId
-        );
-
-    const ptsInput =
-        row.querySelector(".pts");
-
-    /*
-     * Monthly master price becomes the DEFAULT PTS.
-     * The input remains editable for a transaction-specific override.
-     */
-    if (product) {
-
-        const defaultPrice =
-            product.monthly_price;
-
-        if (
-            defaultPrice !== null &&
-            defaultPrice !== undefined &&
-            defaultPrice !== ""
-        ) {
-            ptsInput.value =
-                Number(defaultPrice).toFixed(2);
-        } else {
-            ptsInput.value = "";
-        }
-
-    } else {
-
-        ptsInput.value = "";
-    }
-
+    // PTS is entered separately for each stockist submission.
+    // Product master prices are not copied into sales records.
+    row.querySelector(".pts").value = "";
     calculateEntryRow(row);
 }
 
