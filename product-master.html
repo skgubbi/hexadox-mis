@@ -944,10 +944,53 @@ async function saveMonthlyPrice(productId, button) {
         return;
     }
 
+    // Submitted sales also store a PTS snapshot. Update every sales
+    // entry in the selected period, in chunks to support a large entry set.
+    const {
+        data: salesHeaders,
+        error: salesHeaderError
+    } =
+        await client
+            .from("sales_entry_header")
+            .select("id")
+            .eq("month", month)
+            .eq("year", year);
+
+    if (salesHeaderError) {
+        throw new Error(
+            "Submitted targets updated, but sales could not be found: " +
+            salesHeaderError.message
+        );
+    }
+
+    const entryIds =
+        (salesHeaders || []).map(header => header.id);
+
+    for (let i = 0; i < entryIds.length; i += 500) {
+        const {
+            error: salesUpdateError
+        } =
+            await client
+                .from("sales_entry_details")
+                .update({
+                    pts: value ?? 0
+                })
+                .eq("product_id", productId)
+                .in("entry_id", entryIds.slice(i, i + 500));
+
+        if (salesUpdateError) {
+            throw new Error(
+                "Submitted targets updated, but sales could not be updated: " +
+                salesUpdateError.message
+            );
+        }
+    }
+
     button.disabled = false;
     button.textContent = "SAVE";
 
-    status.textContent = "Saved — submitted targets updated";
+    status.textContent =
+        "Saved — submitted targets and sales updated";
     status.style.color = "#146c43";
 
     setTimeout(() => {
