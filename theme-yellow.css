@@ -43,18 +43,40 @@ select:disabled { background: #EEEEEE !important; }
 .user-role, .user-hq { color: var(--hx-muted) !important; }
 .footer { color: #777 !important; }
 
-/* Dashboard layout: Secondary Achievement by Month + Component Sales side-by-side */
-@media (min-width: 1101px) {
-    .container { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
+/* Dashboard: put Secondary Achievement and Component Sales side-by-side */
+@media (min-width: 768px) {
+    .container {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+        gap: 18px !important;
+    }
+
     .container > .filters,
     .container > .period-note,
     .container > .kpis,
-    .container > .grid2 { grid-column: 1 / -1; }
-    .container > .card:has(#achChart) { grid-column: 1; grid-row: 5; }
-    .container > .card:has(#doctorChart) { grid-column: 2; grid-row: 5; }
-    .container > .card:has(#productChart) { grid-column: 1 / -1; grid-row: 6; }
+    .container > .grid2 {
+        grid-column: 1 / -1 !important;
+    }
+
+    /* Child 5 = Secondary Achievement by Month */
+    .container > .card:nth-child(5) {
+        grid-column: 1 !important;
+        grid-row: 5 !important;
+    }
+
+    /* Child 6 = Product-wise Secondary Achievement */
+    .container > .card:nth-child(6) {
+        grid-column: 1 / -1 !important;
+        grid-row: 6 !important;
+    }
+
+    /* Child 7 = Component Sales */
+    .container > .card:nth-child(7) {
+        grid-column: 2 !important;
+        grid-row: 5 !important;
+    }
 }
 
-@media (max-width: 1100px) {
-    .container { display: block; }
+@media (max-width: 767px) {
+    .container { display: block !important; }
 }
