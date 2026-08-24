@@ -906,10 +906,48 @@ async function saveMonthlyPrice(productId, button) {
         return;
     }
 
+    // Keep already-submitted target sheets aligned with this period's
+    // master PTS. Target value is recalculated by the existing target logic.
+    const month =
+        Number(document.getElementById("priceMonth").value);
+
+    const year =
+        Number(document.getElementById("priceYear").value);
+
+    const {
+        error: targetUpdateError
+    } =
+        await client
+            .from("targets")
+            .update({
+                target_pts: value ?? 0
+            })
+            .eq("product_id", productId)
+            .eq("month", month)
+            .eq("year", year);
+
+    if (targetUpdateError) {
+        console.error(
+            "TARGET PRICE SYNC ERROR:",
+            targetUpdateError
+        );
+
+        showMessage(
+            "Price saved, but submitted targets could not be updated: " +
+            targetUpdateError.message,
+            "error"
+        );
+
+        button.disabled = false;
+        button.textContent = "SAVE";
+
+        return;
+    }
+
     button.disabled = false;
     button.textContent = "SAVE";
 
-    status.textContent = "Saved";
+    status.textContent = "Saved — submitted targets updated";
     status.style.color = "#146c43";
 
     setTimeout(() => {
