@@ -12,6 +12,36 @@ create table if not exists public.hq_monthly_targets (
 
 alter table public.hq_monthly_targets enable row level security;
 
--- Match the access policy used for the existing targets table:
--- grant authenticated users the same select/insert/update permissions
--- appropriate for their assigned HQs.
+create policy "hq monthly targets read assigned hqs"
+on public.hq_monthly_targets for select to authenticated
+using (
+  exists (
+    select 1 from public.user_profiles p
+    where p.id = auth.uid() and p.active = true
+      and (
+        p.role in ('Admin', 'ABM')
+        or exists (
+          select 1 from public.user_hq_mapping m
+          where m.user_id = auth.uid()
+            and m.hq_id = hq_monthly_targets.hq_id
+        )
+      )
+  )
+);
+
+create policy "hq monthly targets write admin abm"
+on public.hq_monthly_targets for all to authenticated
+using (
+  exists (
+    select 1 from public.user_profiles p
+    where p.id = auth.uid() and p.active = true
+      and p.role in ('Admin', 'ABM')
+  )
+)
+with check (
+  exists (
+    select 1 from public.user_profiles p
+    where p.id = auth.uid() and p.active = true
+      and p.role in ('Admin', 'ABM')
+  )
+);
