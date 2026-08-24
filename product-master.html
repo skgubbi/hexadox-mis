@@ -957,10 +957,16 @@ async function saveMonthlyPrice(productId, button) {
             .eq("year", year);
 
     if (salesHeaderError) {
-        throw new Error(
-            "Submitted targets updated, but sales could not be found: " +
-            salesHeaderError.message
+        showMessage(
+            "Price and submitted targets saved, but sales could not be found: " +
+            salesHeaderError.message,
+            "error"
         );
+
+        button.disabled = false;
+        button.textContent = "SAVE";
+
+        return;
     }
 
     const entryIds =
@@ -979,10 +985,16 @@ async function saveMonthlyPrice(productId, button) {
                 .in("entry_id", entryIds.slice(i, i + 500));
 
         if (salesUpdateError) {
-            throw new Error(
-                "Submitted targets updated, but sales could not be updated: " +
-                salesUpdateError.message
+            showMessage(
+                "Price and submitted targets saved, but sales could not be updated: " +
+                salesUpdateError.message,
+                "error"
             );
+
+            button.disabled = false;
+            button.textContent = "SAVE";
+
+            return;
         }
     }
 
