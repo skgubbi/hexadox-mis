@@ -62,27 +62,22 @@ select:disabled { background: #EEEEEE !important; }
         grid-column: 1 / -1 !important;
     }
 
-    /* Secondary Achievement by Month */
     .container > .card:nth-child(5) {
         grid-column: 1 !important;
         grid-row: 5 !important;
     }
 
-    /* Component Sales — immediately beside Secondary Achievement */
     .container > .card:nth-child(7) {
         grid-column: 2 !important;
         grid-row: 5 !important;
     }
 
-    /* Product-wise Secondary Achievement below both */
     .container > .card:nth-child(6) {
         grid-column: 1 / -1 !important;
         grid-row: 6 !important;
     }
 }
 
-/* Mobile: keep Component Sales immediately after Secondary Achievement,
-   then show Product-wise Secondary Achievement. */
 @media (max-width: 767px) {
     .container {
         display: grid !important;
@@ -104,4 +99,18 @@ select:disabled { background: #EEEEEE !important; }
         grid-column: 1 !important;
         grid-row: 7 !important;
     }
+}
+
+/* =========================================================
+   EDIT SUBMITTED DATA — FILTERS ABOVE PRODUCT DATA
+   The dashboard grid above is intentionally scoped away from this page.
+   ========================================================= */
+.container:has(#productArea) {
+    display: block !important;
+    width: 100% !important;
+}
+
+.container:has(#productArea) > .card {
+    display: block !important;
+    width: 100% !important;
 }
