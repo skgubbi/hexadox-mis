@@ -113,3 +113,25 @@ select:disabled { background: #EEEEEE !important; }
     display: block !important;
     width: 100% !important;
 }
+
+/* =========================================================
+   REPORT 3 — KEEP ALL COLUMNS VISIBLE
+   ========================================================= */
+.container:has(#cumulativeAchievementReport) .table-container {
+    overflow-x: visible !important;
+}
+
+.container:has(#cumulativeAchievementReport) table {
+    width: 100% !important;
+    min-width: 0 !important;
+    table-layout: fixed !important;
+}
+
+.container:has(#cumulativeAchievementReport) th,
+.container:has(#cumulativeAchievementReport) td {
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+    padding: 6px 5px !important;
+    font-size: 10px !important;
+}
