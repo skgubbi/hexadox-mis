@@ -43,4 +43,38 @@ if(location.pathname.toLowerCase().endsWith("/reports.html")||location.pathname.
       });
     };
   });
+
+  /* html2pdf can leave the third report heading at the bottom of a page while
+     moving its table away because the report cards are forced to stay intact.
+     Export each report card with normal page flow and start the cumulative
+     value report on a fresh page. This keeps report 3 in the downloaded PDF. */
+  window.addEventListener("DOMContentLoaded",()=>{
+    if(typeof window.downloadReportsPDF!=="function")return;
+    window.downloadReportsPDF=async function(){
+      const btn=document.getElementById("downloadPdfButton");
+      const hasData=["salesReport","achievementSalesReport","cumulativeAchievementReport"].some(id=>document.getElementById(id)?.querySelector("table"));
+      if(!hasData){alert("Please click GENERATE REPORT first.");return}
+      try{
+        btn.disabled=true;btn.textContent="CREATING PDF...";
+        const source=document.querySelector(".container");
+        const clone=source.cloneNode(true);
+        const filterCard=clone.querySelector(".card:first-child");
+        if(filterCard)filterCard.remove();
+        clone.querySelectorAll(".actions,.message").forEach(x=>x.remove());
+        clone.style.width="100%";clone.style.maxWidth="none";clone.style.padding="0";clone.style.margin="0";clone.style.background="#fff";
+        const cards=[...clone.querySelectorAll(".card")];
+        cards.forEach((x,i)=>{
+          x.style.boxShadow="none";x.style.border="0";x.style.pageBreakInside="auto";x.style.breakInside="auto";
+          if(i>0){x.style.pageBreakBefore="always";x.style.breakBefore="page";}
+        });
+        clone.querySelectorAll("table").forEach(t=>{t.style.fontSize="9px";t.style.minWidth="0";t.style.width="100%";t.style.pageBreakInside="auto";t.style.breakInside="auto"});
+        clone.querySelectorAll("tr").forEach(r=>{r.style.pageBreakInside="avoid";r.style.breakInside="avoid"});
+        const title=document.createElement("div");
+        title.innerHTML='<h1 style="margin:0 0 5px;text-align:center;font-size:20px">HEXADOX MIS</h1><div style="text-align:center;font-size:14px;font-weight:bold;margin-bottom:8px">SALES REPORT</div>';
+        const year=document.getElementById("year")?.value||"";const sm=document.getElementById("startMonth")?.selectedOptions[0]?.text||"";const em=document.getElementById("endMonth")?.selectedOptions[0]?.text||"";const hq=document.getElementById("hq")?.selectedOptions[0]?.text||"All HQs";const product=document.getElementById("product")?.selectedOptions[0]?.text||"All Products";
+        const meta=document.createElement("div");meta.style.cssText="font-size:10px;text-align:center;color:#555;margin-bottom:14px";meta.textContent=`Period: ${sm} ${year} → ${em} ${year} | HQ: ${hq} | Product: ${product}`;title.appendChild(meta);clone.insertBefore(title,clone.firstChild);
+        await window.html2pdf().set({margin:[8,8,10,8],filename:`Hexadox_MIS_Sales_Report_${year}.pdf`,image:{type:"jpeg",quality:.96},html2canvas:{scale:2,useCORS:true,backgroundColor:"#ffffff"},jsPDF:{unit:"mm",format:"a4",orientation:"landscape"},pagebreak:{mode:["css","legacy"]}}).from(clone).save();
+      }catch(e){console.error("PDF ERROR:",e);alert(e.message||"Unable to create PDF.")}finally{btn.disabled=false;btn.textContent="DOWNLOAD PDF"}
+    };
+  });
 }
