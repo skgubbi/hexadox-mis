@@ -96,7 +96,7 @@ window.addEventListener("DOMContentLoaded",()=>{
       setLoading(true,"Loading submitted sales...");
       try{
         const{data:heads,error:he}=await client.from("sales_entry_header").select("id,stockist_id,hq_id,month,year").eq("stockist_id",s).eq("hq_id",h).eq("month",m).eq("year",y).limit(1);if(he)throw he;if(!heads?.length)throw new Error("No submitted sales found for this Month, Year, HQ and Stockist.");currentHeader=heads[0];
-        const{data:rows,error:de}=await client.from("sales_entry_details").select("id,product_id,pts,primary_pts,secondary_pts,primary_units,secondary_units,products(product_name)").eq("entry_id",currentHeader.id).order("id");if(de)throw de;salesDetails=(rows||[]).filter(r=>(Number(r.primary_units)||0)!==0||(Number(r.secondary_units)||0)!==0||(Number(r.primary_pts??r.pts)||0)!==0);
+        const{data:rows,error:de}=await client.from("sales_entry_details").select("id,product_id,pts,primary_pts,secondary_pts,primary_units,secondary_units,products(product_name)").eq("entry_id",currentHeader.id).order("id");if(de)throw de;salesDetails=(rows||[]).filter(r=>(Number(r.primary_units)||0)!==0||(Number(r.secondary_units)||0)!==0||(Number(r.primary_pts??r.pts)||0)!==0).sort((a,b)=>(a.products?.product_name||a.product_name||"").localeCompare(b.products?.product_name||b.product_name||""));
         const{data:prods,error:pe}=await client.from("products").select("id,product_name").eq("active",true).order("product_name");if(pe)throw pe;activeProducts=prods||[];renderSplitSales();saveArea.classList.remove("hidden");
       }catch(e){productArea.innerHTML='<div class="message error" style="display:block">'+escapeHTML(e.message)+'</div>'}finally{setLoading(false)}
     };
