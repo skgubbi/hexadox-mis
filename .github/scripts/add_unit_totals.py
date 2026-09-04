@@ -4,32 +4,20 @@ import re
 
 def patch_data_entry(s):
     if 'total-primary-units' not in s:
-        s = re.sub(
-            r'<tfoot>\s*<tr class="totals-row">.*?</tr>\s*</tfoot>',
-            '<tfoot><tr class="totals-row"><td colspan="3">TOTAL</td><td id="total-primary-units">0</td><td id="total-primary">0.00</td><td id="total-secondary-units">0</td><td id="total-secondary">0.00</td><td>-</td></tr></tfoot>',
-            s, count=1, flags=re.S)
+        s = re.sub(r'<tfoot>\s*<tr class="totals-row">.*?</tr>\s*</tfoot>', '<tfoot><tr class="totals-row"><td colspan="3">TOTAL</td><td id="total-primary-units">0</td><td id="total-primary">0.00</td><td id="total-secondary-units">0</td><td id="total-secondary">0.00</td><td>-</td></tr></tfoot>', s, count=1, flags=re.S)
     if 'primaryUnitsTotal' not in s:
-        s = s.replace(
-            'let primaryTotal = 0, secondaryTotal = 0;',
-            'let primaryTotal = 0, secondaryTotal = 0, primaryUnitsTotal = 0, secondaryUnitsTotal = 0;', 1)
-        s = re.sub(r'(primaryTotal\s*\+=\s*pts\s*\*\s*primary;)',
-                   r'primaryUnitsTotal += primary;\n        \1', s, count=1)
-        s = re.sub(r'(secondaryTotal\s*\+=\s*pts\s*\*\s*secondary;)',
-                   r'secondaryUnitsTotal += secondary;\n        \1', s, count=1)
-        s = s.replace(
-            'if (document.getElementById("total-primary")) document.getElementById("total-primary").textContent = primaryTotal.toFixed(2);',
-            'if (document.getElementById("total-primary-units")) document.getElementById("total-primary-units").textContent = primaryUnitsTotal.toLocaleString("en-IN");\n    if (document.getElementById("total-primary")) document.getElementById("total-primary").textContent = primaryTotal.toFixed(2);', 1)
-        s = s.replace(
-            'if (document.getElementById("total-secondary")) document.getElementById("total-secondary").textContent = secondaryTotal.toFixed(2);',
-            'if (document.getElementById("total-secondary-units")) document.getElementById("total-secondary-units").textContent = secondaryUnitsTotal.toLocaleString("en-IN");\n    if (document.getElementById("total-secondary")) document.getElementById("total-secondary").textContent = secondaryTotal.toFixed(2);', 1)
+        s = s.replace('let primaryTotal = 0, secondaryTotal = 0;', 'let primaryTotal = 0, secondaryTotal = 0, primaryUnitsTotal = 0, secondaryUnitsTotal = 0;', 1)
+        s = re.sub(r'(primaryTotal\s*\+=\s*pts\s*\*\s*primary;)', r'primaryUnitsTotal += primary;\n        \1', s, count=1)
+        s = re.sub(r'(secondaryTotal\s*\+=\s*pts\s*\*\s*secondary;)', r'secondaryUnitsTotal += secondary;\n        \1', s, count=1)
+        s = s.replace('if (document.getElementById("total-primary")) document.getElementById("total-primary").textContent = primaryTotal.toFixed(2);', 'if (document.getElementById("total-primary-units")) document.getElementById("total-primary-units").textContent = primaryUnitsTotal.toLocaleString("en-IN");\n    if (document.getElementById("total-primary")) document.getElementById("total-primary").textContent = primaryTotal.toFixed(2);', 1)
+        s = s.replace('if (document.getElementById("total-secondary")) document.getElementById("total-secondary").textContent = secondaryTotal.toFixed(2);', 'if (document.getElementById("total-secondary-units")) document.getElementById("total-secondary-units").textContent = secondaryUnitsTotal.toLocaleString("en-IN");\n    if (document.getElementById("total-secondary")) document.getElementById("total-secondary").textContent = secondaryTotal.toFixed(2);', 1)
     return s
 
 
 def patch_submitted(s):
     if 'puTotal' not in s:
         s = s.replace('let pv=0,sv=0;', 'let puTotal=0,suTotal=0,pv=0,sv=0;', 1)
-        s = s.replace('pv+=p;sv+=s2;',
-                      'puTotal+=Number(d.primary_units)||0;suTotal+=Number(d.secondary_units)||0;pv+=p;sv+=s2;', 1)
+        s = s.replace('pv+=p;sv+=s2;', 'puTotal+=Number(d.primary_units)||0;suTotal+=Number(d.secondary_units)||0;pv+=p;sv+=s2;', 1)
         old = '''html+='<tr class="total"><td colspan="3">TOTAL PRIMARY</td><td>'+money(pv)+'</td><td colspan="2">TOTAL SECONDARY</td><td>'+money(sv)+'</td></tr>'''
         new = '''html+='<tr class="total"><td>TOTAL</td><td></td><td>'+n(puTotal)+'</td><td>'+money(pv)+'</td><td></td><td>'+n(suTotal)+'</td><td>'+money(sv)+'</td></tr>'''
         s = s.replace(old, new, 1)
@@ -37,12 +25,12 @@ def patch_submitted(s):
 
 
 def patch_edit(s):
-    if 'edit-total-primary-units' in s:
-        return s
-    marker = "html+='</tbody></table></div>';"
-    footer = "html+='<tfoot><tr class=\"total\"><td colspan=\"3\">TOTAL</td><td class=\"edit-total-primary-units\">0</td><td class=\"edit-total-primary\">0.00</td><td></td><td class=\"edit-total-secondary-units\">0</td><td class=\"edit-total-secondary\">0.00</td><td></td></tr></tfoot></tbody></table></div>';"
-    if marker in s:
-        s = s.replace(marker, footer, 1)
+    if 'edit-total-primary-units' not in s:
+        footer_html = '<tfoot><tr class="total"><td colspan="3">TOTAL</td><td class="edit-total-primary-units">0</td><td class="edit-total-primary">0.00</td><td></td><td class="edit-total-secondary-units">0</td><td class="edit-total-secondary">0.00</td><td></td></tr></tfoot>'
+        if "html+='</tbody></table></div>';" in s:
+            s = s.replace("html+='</tbody></table></div>';", "html+='" + footer_html.replace('"','\\"') + "</tbody></table></div>';", 1)
+        elif "h+='</tbody></table></div>';" in s:
+            s = s.replace("h+='</tbody></table></div>';", "h+='" + footer_html.replace('"','\\"') + "</tbody></table></div>';", 1)
     if '[data-f="primary_pts"]' in s:
         fn = '''function updateEditSalesTotals(){let pu=0,pv=0,su=0,sv=0;document.querySelectorAll('#productArea tr[data-id]').forEach(r=>{const pp=+r.querySelector('[data-f="primary_pts"]').value||0,p=+r.querySelector('[data-f="primary_units"]').value||0,sp=+r.querySelector('[data-f="secondary_pts"]').value||0,s=+r.querySelector('[data-f="secondary_units"]').value||0;pu+=p;pv+=pp*p;su+=s;sv+=sp*s});const a=document.querySelector('.edit-total-primary-units'),b=document.querySelector('.edit-total-primary'),c=document.querySelector('.edit-total-secondary-units'),d=document.querySelector('.edit-total-secondary');if(a)a.textContent=pu.toLocaleString('en-IN');if(b)b.textContent=money(pv);if(c)c.textContent=su.toLocaleString('en-IN');if(d)d.textContent=money(sv)}\n'''
     else:
@@ -56,12 +44,7 @@ def patch_edit(s):
     return s
 
 
-for name, fn in [
-    ('data-entry.html', patch_data_entry),
-    ('submitted-data.html', patch_submitted),
-    ('edit-data.html', patch_edit),
-    ('edit-data-v2.html', patch_edit),
-]:
+for name, fn in [('data-entry.html', patch_data_entry), ('submitted-data.html', patch_submitted), ('edit-data.html', patch_edit), ('edit-data-v2.html', patch_edit)]:
     p = Path(name)
     if p.exists():
         old = p.read_text(encoding='utf-8')
