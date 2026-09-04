@@ -25,22 +25,26 @@ def patch_submitted(s):
 
 
 def patch_edit(s):
-    if 'edit-total-primary-units' not in s:
-        footer_html = '<tfoot><tr class="total"><td colspan="3">TOTAL</td><td class="edit-total-primary-units">0</td><td class="edit-total-primary">0.00</td><td></td><td class="edit-total-secondary-units">0</td><td class="edit-total-secondary">0.00</td><td></td></tr></tfoot>'
+    footer = '<tfoot><tr class="total"><td colspan="3">TOTAL</td><td class="edit-total-primary-units">0</td><td class="edit-total-primary">0.00</td><td></td><td class="edit-total-secondary-units">0</td><td class="edit-total-secondary">0.00</td><td></td></tr></tfoot>'
+    if 'class="edit-total-primary-units"' not in s:
         if "html+='</tbody></table></div>';" in s:
-            s = s.replace("html+='</tbody></table></div>';", "html+='" + footer_html.replace('"','\\"') + "</tbody></table></div>';", 1)
+            s = s.replace("html+='</tbody></table></div>';", "html+='" + footer.replace('"','\\"') + "</tbody></table></div>';", 1)
         elif "h+='</tbody></table></div>';" in s:
-            s = s.replace("h+='</tbody></table></div>';", "h+='" + footer_html.replace('"','\\"') + "</tbody></table></div>';", 1)
+            s = s.replace("h+='</tbody></table></div>';", "h+='" + footer.replace('"','\\"') + "</tbody></table></div>';", 1)
     if '[data-f="primary_pts"]' in s:
         fn = '''function updateEditSalesTotals(){let pu=0,pv=0,su=0,sv=0;document.querySelectorAll('#productArea tr[data-id]').forEach(r=>{const pp=+r.querySelector('[data-f="primary_pts"]').value||0,p=+r.querySelector('[data-f="primary_units"]').value||0,sp=+r.querySelector('[data-f="secondary_pts"]').value||0,s=+r.querySelector('[data-f="secondary_units"]').value||0;pu+=p;pv+=pp*p;su+=s;sv+=sp*s});const a=document.querySelector('.edit-total-primary-units'),b=document.querySelector('.edit-total-primary'),c=document.querySelector('.edit-total-secondary-units'),d=document.querySelector('.edit-total-secondary');if(a)a.textContent=pu.toLocaleString('en-IN');if(b)b.textContent=money(pv);if(c)c.textContent=su.toLocaleString('en-IN');if(d)d.textContent=money(sv)}\n'''
     else:
         fn = '''function updateEditSalesTotals(){let pu=0,pv=0,su=0,sv=0;document.querySelectorAll('#productArea tr[data-id]').forEach(r=>{const pp=+r.querySelector('[data-f="pp"]').value||0,p=+r.querySelector('[data-f="pu"]').value||0,sp=+r.querySelector('[data-f="sp"]').value||0,s=+r.querySelector('[data-f="su"]').value||0;pu+=p;pv+=pp*p;su+=s;sv+=sp*s});const a=document.querySelector('.edit-total-primary-units'),b=document.querySelector('.edit-total-primary'),c=document.querySelector('.edit-total-secondary-units'),d=document.querySelector('.edit-total-secondary');if(a)a.textContent=pu.toLocaleString('en-IN');if(b)b.textContent=money(pv);if(c)c.textContent=su.toLocaleString('en-IN');if(d)d.textContent=money(sv)}\n'''
-    pos = s.find('function renderSales()')
-    if pos >= 0 and 'function updateEditSalesTotals()' not in s:
-        s = s[:pos] + fn + s[pos:]
-    s = re.sub(r"(r\.querySelector\('\.sv'\)\.textContent=money\([^;]+;)", r"\1updateEditSalesTotals();", s, count=1)
-    if "updateEditSalesTotals();$('saveArea').classList.remove('hidden');" not in s:
-        s = s.replace("$('saveArea').classList.remove('hidden');", "updateEditSalesTotals();$('saveArea').classList.remove('hidden');", 1)
+    if 'function updateEditSalesTotals()' not in s:
+        pos = s.find('function renderSales()')
+        if pos >= 0:
+            s = s[:pos] + fn + s[pos:]
+    if "r.querySelector('.sv').textContent=money(sp*su);updateEditSalesTotals();" not in s:
+        s = s.replace("r.querySelector('.sv').textContent=money(sp*su)", "r.querySelector('.sv').textContent=money(sp*su);updateEditSalesTotals()", 1)
+    s = s.replace('updateEditSalesTotals();updateEditSalesTotals();', 'updateEditSalesTotals();')
+    if "$('productArea').innerHTML=html;updateEditSalesTotals();" not in s and "$('productArea').innerHTML=h;updateEditSalesTotals();" not in s:
+        s = s.replace("$('productArea').innerHTML=html;$('saveArea')", "$('productArea').innerHTML=html;updateEditSalesTotals();$('saveArea')", 1)
+        s = s.replace("$('productArea').innerHTML=h;$('saveArea')", "$('productArea').innerHTML=h;updateEditSalesTotals();$('saveArea')", 1)
     return s
 
 
