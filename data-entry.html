@@ -816,9 +816,7 @@ function renderProductTable() {
                     <th>#</th><th>Product</th><th>PTS</th><th>Primary Qty</th><th>Primary Value</th><th>Secondary Qty</th><th>Secondary Value</th><th>Action</th>
                 </tr></thead>
                 <tbody id="productRows"></tbody>
-                <tfoot><tr class="totals-row">
-                    <td colspan="4">TOTAL</td><td id="total-primary">0.00</td><td>-</td><td id="total-secondary">0.00</td><td>-</td>
-                </tr></tfoot>
+                <tfoot><tr class="totals-row"><td colspan="3">TOTAL</td><td id="total-primary-units">0</td><td id="total-primary">0.00</td><td id="total-secondary-units">0</td><td id="total-secondary">0.00</td><td>-</td></tr></tfoot>
             </table>
         </div>
         <div class="submit-area" style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
@@ -975,15 +973,19 @@ function calculateEntryRow(row) {
 }
 
 function calculateTotals() {
-    let primaryTotal = 0, secondaryTotal = 0;
+    let primaryTotal = 0, secondaryTotal = 0, primaryUnitsTotal = 0, secondaryUnitsTotal = 0;
     document.querySelectorAll("#productRows .product-entry-row").forEach(row => {
         const pts = parseFloat(row.querySelector(".pts").value) || 0;
         const primary = parseInt(row.querySelector(".primary").value) || 0;
         const secondary = parseInt(row.querySelector(".secondary").value) || 0;
+        primaryUnitsTotal += primary;
         primaryTotal += pts * primary;
+        secondaryUnitsTotal += secondary;
         secondaryTotal += pts * secondary;
     });
+    if (document.getElementById("total-primary-units")) document.getElementById("total-primary-units").textContent = primaryUnitsTotal.toLocaleString("en-IN");
     if (document.getElementById("total-primary")) document.getElementById("total-primary").textContent = primaryTotal.toFixed(2);
+    if (document.getElementById("total-secondary-units")) document.getElementById("total-secondary-units").textContent = secondaryUnitsTotal.toLocaleString("en-IN");
     if (document.getElementById("total-secondary")) document.getElementById("total-secondary").textContent = secondaryTotal.toFixed(2);
 }
 
