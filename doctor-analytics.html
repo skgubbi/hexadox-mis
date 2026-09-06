@@ -1,7 +1,63 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Hexadox MIS - Doctor Analytics</title><link rel="stylesheet" href="style.css?v=20260906-3"><link rel="stylesheet" href="theme-yellow.css"></head><body><div class="container"><div class="page-top"><h2>DOCTOR ANALYTICS</h2><button class="back-button" onclick="location.href='home.html'">HOME</button></div>
-<div class="card"><h3>Prescription vs Secondary Sales</h3><div class="form-grid"><div><label>Month</label><select id="month"></select></div><div><label>Year</label><select id="year"></select></div><div><label>HQ</label><select id="hq" onchange="loadMarkets()"></select></div><div><label>Market</label><select id="market"></select></div><div><label>Product</label><select id="product"></select></div></div><div class="actions"><button class="btn" onclick="generateReport()">GENERATE COMPARISON</button></div><div id="message" class="message"></div></div>
-<div id="report"></div></div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="app.js?v=20260906-3"></script><script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Hexadox MIS - Doctor Analytics</title>
+<link rel="stylesheet" href="style.css?v=20260906-4">
+<link rel="stylesheet" href="theme-yellow.css">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f5f6f7;color:#222;font-family:Arial,sans-serif}
+.container{max-width:1250px;margin:0 auto;padding:24px 28px 50px}
+.page-top{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:22px;padding:16px 20px;background:#fff;border-radius:12px;box-shadow:0 3px 14px rgba(0,0,0,.08);border-left:5px solid #f0c419}
+.page-top h2{margin:0;font-size:24px;letter-spacing:.4px;color:#222}
+.back-button{min-width:110px;background:#fff;color:#222;border:1px solid #ddd;padding:10px 20px;border-radius:7px;cursor:pointer;font-weight:700}
+.card{background:#fff;border-radius:12px;padding:22px 24px;margin-bottom:20px;box-shadow:0 3px 14px rgba(0,0,0,.07)}
+.card h3{margin:0 0 18px;font-size:18px;color:#333;padding-bottom:12px;border-bottom:1px solid #eee}
+.filter-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;align-items:end}
+label{display:block;font-size:13px;font-weight:700;color:#555;margin:0 0 7px}
+input,select{width:100%;height:42px;padding:9px 11px;border:1px solid #d5d9dc;border-radius:7px;background:#fff;color:#222;font-size:14px}
+input:focus,select:focus{outline:none;border-color:#d6ad00;box-shadow:0 0 0 2px rgba(240,196,25,.18)}
+.actions{margin-top:20px;display:flex;justify-content:flex-end;gap:12px}
+.btn{height:42px;padding:0 22px;border:0;border-radius:7px;background:#f0c419;color:#222;font-weight:700;cursor:pointer;min-width:200px}
+.btn:hover{filter:brightness(.97)}
+.message{min-height:20px;margin-top:12px;font-size:13px;font-weight:600}.message.success{color:#2e7d32}.message.error{color:#c62828}
+.kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+.kpi{padding:16px;border:1px solid #e5e7e9;border-radius:9px;background:#fafafa;min-height:82px}
+.kpi span{display:block;font-size:12px;color:#666;margin-bottom:9px}.kpi b{font-size:22px;color:#222}
+.muted{color:#666;font-size:13px;line-height:1.5;margin:15px 0 0}
+.table-wrap{width:100%;overflow-x:auto;border:1px solid #e4e6e8;border-radius:8px}
+table{width:100%;border-collapse:collapse;min-width:900px}
+th{background:#292929;color:#fff;font-size:13px;padding:11px 12px;text-align:left;white-space:nowrap}
+td{padding:11px 12px;border-top:1px solid #eee;font-size:14px;vertical-align:middle}
+tbody tr:hover{background:#fffdf0}
+@media(max-width:950px){.filter-grid{grid-template-columns:repeat(3,1fr)}.kpi-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:650px){.container{padding:16px 14px 35px}.page-top h2{font-size:20px}.filter-grid,.kpi-grid{grid-template-columns:1fr}.actions{justify-content:stretch}.btn{width:100%}}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="page-top"><h2>DOCTOR ANALYTICS</h2><button class="back-button" onclick="location.href='home.html'">HOME</button></div>
+
+<div class="card">
+<h3>Prescription vs Secondary Sales</h3>
+<div class="filter-grid">
+<div><label for="month">Month</label><select id="month"></select></div>
+<div><label for="year">Year</label><select id="year"></select></div>
+<div><label for="hq">HQ</label><select id="hq" onchange="loadMarkets()"></select></div>
+<div><label for="market">Market</label><select id="market"></select></div>
+<div><label for="product">Product</label><select id="product"></select></div>
+</div>
+<div class="actions"><button class="btn" onclick="generateReport()">GENERATE COMPARISON</button></div>
+<div id="message" class="message"></div>
+</div>
+
+<div id="report"></div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js?v=20260906-4"></script>
+<script>
 const months=['','January','February','March','April','May','June','July','August','September','October','November','December'];let hqs=[],markets=[],products=[];
 const msg=(t,e=false)=>{const x=document.getElementById('message');x.textContent=t;x.className='message '+(e?'error':'success')};
 async function init(){const r=await getCurrentUserProfile();if(r.error){location.href='index.html';return}const now=new Date();month.innerHTML=months.slice(1).map((m,i)=>`<option value="${i+1}" ${i+1===now.getMonth()+1?'selected':''}>${m}</option>`).join('');year.innerHTML=[now.getFullYear()-1,now.getFullYear(),now.getFullYear()+1].map(y=>`<option ${y===now.getFullYear()?'selected':''}>${y}</option>`).join('');let z=await client.from('hqs').select('id,hq_name').eq('active',true).order('hq_name');hqs=z.data||[];hq.innerHTML='<option value="">All HQs</option>'+hqs.map(x=>`<option value="${x.id}">${esc(x.hq_name)}</option>`).join('');z=await client.from('products').select('id,product_name').eq('active',true).order('product_name');products=z.data||[];product.innerHTML='<option value="">Select Product</option>'+products.map(x=>`<option value="${x.id}">${esc(x.product_name)}</option>`).join('');await loadMarkets()}
@@ -13,4 +69,6 @@ const totalRx=rx.reduce((s,x)=>s+(Number(x.rx_count)||0),0),variance=salesUnits-
 let html=`<div class="card"><h3>${esc(pname)} — ${months[m]} ${y}</h3><div class="kpi-grid"><div class="kpi"><span>Total Prescriptions</span><b>${totalRx}</b></div><div class="kpi"><span>Secondary Sales Units</span><b>${salesUnits}</b></div><div class="kpi"><span>Variance (Sales − Rx)</span><b>${variance>0?'+':''}${variance}</b></div><div class="kpi"><span>Match %</span><b>${match.toFixed(1)}%</b></div><div class="kpi"><span>Secondary Sales Value</span><b>₹${salesValue.toFixed(2)}</b></div></div><p class="muted">For the first version, comparison uses 1 Rx = 1 expected unit. Match % is the closer of Rx and secondary units divided by the larger figure.</p></div>`;
 html+=`<div class="card"><h3>Doctor-wise Reconciliation</h3><div class="table-wrap"><table><thead><tr><th>Doctor</th><th>HQ</th><th>Market</th><th>Status</th><th>Rx</th><th>Expected Units</th><th>Secondary Sales</th><th>Variance</th></tr></thead><tbody>`;doctors.forEach(d=>{const r=rxMap.get(d.id),rxn=Number(r?.rx_count)||0;html+=`<tr><td>${esc(d.doctor_name)}</td><td>${esc(d.hqs?.hq_name||'')}</td><td>${esc(d.markets?.market_name||'')}</td><td>${esc(r?.doctor_status||'No entry')}</td><td>${rxn}</td><td>${rxn}</td><td>—</td><td>—</td></tr>`});html+=`</tbody></table></div><p class="muted">Secondary sales are recorded against stockists, not individual doctors, so doctor-level sales cannot be attributed without a doctor-to-sale link. The HQ/product/month reconciliation above is therefore the valid Rx-to-sales match.</p></div>`;report.innerHTML=html;msg('Comparison generated successfully.')}catch(e){console.error(e);msg(e.message||'Unable to generate report.',true)}}
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}init();
-</script></body></html>
+</script>
+</body>
+</html>
