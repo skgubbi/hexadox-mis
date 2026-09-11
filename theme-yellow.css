@@ -1,137 +1,41 @@
-/* =========================================================
-   HEXADOX MIS — YELLOW THEME
-   ========================================================= */
-
+/* HEXADOX MIS — GREY + RICH LEMON YELLOW THEME */
 :root {
-    --hx-yellow: #F2C300;
-    --hx-yellow-dark: #C99F00;
-    --hx-yellow-soft: #FFF7CC;
-    --hx-yellow-pale: #FFFBEA;
-    --hx-charcoal: #252525;
-    --hx-text: #222222;
-    --hx-muted: #666666;
-    --hx-border: #D8D8D8;
-    --hx-white: #FFFFFF;
-    --hx-bg: #F7F7F4;
+  --hx-lemon:#E6FF00; --hx-lemon-bright:#F0FF33; --hx-lemon-dark:#B9CC00;
+  --hx-bg:#34373B; --hx-surface:#41454A; --hx-surface-2:#4A4E53; --hx-surface-3:#50555A;
+  --hx-charcoal:#24272A; --hx-text:#E6FF00; --hx-muted:#E6FF00; --hx-border:#686D72;
+  --hx-shadow:rgba(0,0,0,.32);
 }
-
-body { background: var(--hx-bg) !important; color: var(--hx-text) !important; }
-.header { background: var(--hx-yellow) !important; color: var(--hx-charcoal) !important; }
-.header h2 { color: var(--hx-charcoal) !important; }
-.login-box { border-top: 6px solid var(--hx-yellow) !important; }
-h1 { color: var(--hx-charcoal) !important; }
-input:focus, select:focus { border-color: var(--hx-yellow-dark) !important; }
-button, .save-button, .submit-button, .search-button { background: var(--hx-yellow) !important; color: var(--hx-charcoal) !important; }
-button:hover, .save-button:hover, .submit-button:hover, .search-button:hover { background: var(--hx-yellow-dark) !important; color: var(--hx-white) !important; }
-button:disabled, .save-button:disabled, .submit-button:disabled, .search-button:disabled { background: #999 !important; color: var(--hx-white) !important; }
-.back-button { background: var(--hx-white) !important; color: var(--hx-charcoal) !important; border: 1px solid rgba(0,0,0,0.12) !important; }
-.back-button:hover { background: var(--hx-yellow-soft) !important; color: var(--hx-charcoal) !important; }
-.card, .menu-card, .login-box { background: var(--hx-white) !important; }
-.card h3, .menu-card h3, .welcome h3 { color: var(--hx-charcoal) !important; }
-.menu-card:hover { box-shadow: 0 6px 18px rgba(0,0,0,0.13) !important; border-color: var(--hx-yellow) !important; }
-th { background: var(--hx-charcoal) !important; color: var(--hx-white) !important; }
-.totals-row { background: var(--hx-yellow-pale) !important; }
-input, select { border-color: var(--hx-border) !important; }
-select:disabled { background: #EEEEEE !important; }
-.info { background: var(--hx-yellow-soft) !important; border-left: 4px solid var(--hx-yellow) !important; }
-.loading { color: var(--hx-yellow-dark) !important; }
-.status-active { color: #2E7D32 !important; }
-.status-inactive { color: #A61B1B !important; }
-.success { background: #E8F5E9 !important; color: #256029 !important; }
-.error { background: #FDECEC !important; color: #9B1C1C !important; }
-.user-name { color: var(--hx-charcoal) !important; }
-.user-role, .user-hq { color: var(--hx-muted) !important; }
-.footer { color: #777 !important; }
-
-/* =========================================================
-   DASHBOARD LAYOUT
-   Scope this grid ONLY to the dashboard. The previous version
-   applied .container grid rules globally and affected other MIS pages.
-   ========================================================= */
-@media (min-width: 768px) {
-    .container:has(#progressChart) {
-        display: grid !important;
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
-        gap: 18px !important;
-    }
-
-    .container:has(#progressChart) > .filters,
-    .container:has(#progressChart) > .period-note,
-    .container:has(#progressChart) > .kpis,
-    .container:has(#progressChart) > .grid2 {
-        grid-column: 1 / -1 !important;
-    }
-
-    .container:has(#progressChart) > .card:nth-child(5) {
-        grid-column: 1 !important;
-        grid-row: 5 !important;
-    }
-
-    .container:has(#progressChart) > .card:nth-child(7) {
-        grid-column: 2 !important;
-        grid-row: 5 !important;
-    }
-
-    .container:has(#progressChart) > .card:nth-child(6) {
-        grid-column: 1 / -1 !important;
-        grid-row: 6 !important;
-    }
-}
-
-@media (max-width: 767px) {
-    .container:has(#progressChart) {
-        display: grid !important;
-        grid-template-columns: 1fr !important;
-        gap: 18px !important;
-    }
-
-    .container:has(#progressChart) > .card:nth-child(5) {
-        grid-column: 1 !important;
-        grid-row: 5 !important;
-    }
-
-    .container:has(#progressChart) > .card:nth-child(7) {
-        grid-column: 1 !important;
-        grid-row: 6 !important;
-    }
-
-    .container:has(#progressChart) > .card:nth-child(6) {
-        grid-column: 1 !important;
-        grid-row: 7 !important;
-    }
-}
-
-/* =========================================================
-   EDIT SUBMITTED DATA — FILTERS ABOVE PRODUCT DATA
-   ========================================================= */
-.container:has(#productArea) {
-    display: block !important;
-    width: 100% !important;
-}
-
-.container:has(#productArea) > .card {
-    display: block !important;
-    width: 100% !important;
-}
-
-/* =========================================================
-   REPORT 3 — KEEP ALL COLUMNS VISIBLE
-   ========================================================= */
-.container:has(#cumulativeAchievementReport) .table-container {
-    overflow-x: visible !important;
-}
-
-.container:has(#cumulativeAchievementReport) table {
-    width: 100% !important;
-    min-width: 0 !important;
-    table-layout: fixed !important;
-}
-
-.container:has(#cumulativeAchievementReport) th,
-.container:has(#cumulativeAchievementReport) td {
-    white-space: normal !important;
-    word-break: break-word !important;
-    overflow-wrap: anywhere !important;
-    padding: 6px 5px !important;
-    font-size: 10px !important;
-}
+html,body{background:var(--hx-bg)!important;color:var(--hx-lemon)!important}
+body,body *{color:var(--hx-lemon)}
+.header{background:var(--hx-charcoal)!important;color:var(--hx-lemon)!important;border-bottom:2px solid var(--hx-lemon)!important}
+.header h2,.header *{color:var(--hx-lemon)!important}
+.menu-box,.card,.menu-card,.login-box,.filters,.kpi,.doctor-box,.welcome,.table-container,.info-box,.panel,.modal-content{background:var(--hx-surface)!important;color:var(--hx-lemon)!important;border-color:var(--hx-border)!important;box-shadow:0 8px 24px var(--hx-shadow)!important}
+h1,h2,h3,h4,h5,h6,p,label,span,div,td,th,li,a,.tab-title,.tab-subtitle,.user-name,.user-role,.user-hq,.period-note,.kpi .label,.kpi .value,.kpi .sub,.card .note,.doctor-box .label,.doctor-box .value,.doctor-box .sub,.footer,.loading,.status-active,.status-inactive{color:var(--hx-lemon)!important}
+button,.button,.save-button,.submit-button,.search-button,.logout-button,.fullscreen-button,.back,.back-button{background:var(--hx-charcoal)!important;color:var(--hx-lemon)!important;border:1px solid var(--hx-lemon)!important;font-weight:700!important}
+button:hover,.button:hover,.save-button:hover,.submit-button:hover,.search-button:hover,.logout-button:hover,.fullscreen-button:hover,.back:hover,.back-button:hover{background:var(--hx-lemon)!important;color:var(--hx-charcoal)!important;border-color:var(--hx-lemon)!important}
+button:disabled,.save-button:disabled,.submit-button:disabled,.search-button:disabled{background:#55595E!important;color:var(--hx-lemon)!important;border-color:#777C82!important}
+input,select,textarea{background:var(--hx-surface-2)!important;color:var(--hx-lemon)!important;border:1px solid var(--hx-border)!important}
+input::placeholder,textarea::placeholder{color:var(--hx-lemon)!important;opacity:.72!important}
+input:focus,select:focus,textarea:focus{border-color:var(--hx-lemon)!important;outline:1px solid var(--hx-lemon)!important}
+select:disabled,input:disabled,textarea:disabled{background:#55595E!important;color:var(--hx-lemon)!important}
+option{background:var(--hx-surface-2)!important;color:var(--hx-lemon)!important}
+.menu-card,.mis-tab,.kpi,.doctor-box{background:var(--hx-surface-2)!important;border-color:var(--hx-border)!important}
+.menu-card:hover,.mis-tab:hover{background:var(--hx-surface-3)!important;border-color:var(--hx-lemon)!important;box-shadow:0 8px 22px rgba(0,0,0,.38)!important}
+.tab-icon{background:var(--hx-charcoal)!important;color:var(--hx-lemon)!important;border:1px solid var(--hx-lemon)!important}
+.user-info,.info{background:#3F4333!important;border-color:var(--hx-lemon)!important;color:var(--hx-lemon)!important}
+.future-badge{background:var(--hx-charcoal)!important;color:var(--hx-lemon)!important;border:1px solid var(--hx-lemon)!important}
+table{background:var(--hx-surface)!important;color:var(--hx-lemon)!important;border-color:var(--hx-border)!important}
+th{background:var(--hx-charcoal)!important;color:var(--hx-lemon)!important;border-color:var(--hx-border)!important}
+td{background:var(--hx-surface-2)!important;color:var(--hx-lemon)!important;border-color:var(--hx-border)!important}
+tr:nth-child(even) td{background:var(--hx-surface-3)!important}tr:hover td{background:#595E63!important;color:var(--hx-lemon-bright)!important}
+.totals-row{background:#3F4333!important;color:var(--hx-lemon)!important}
+.success{background:#31452F!important;color:var(--hx-lemon)!important;border:1px solid #5E7A4F!important}
+.error{background:#4B3030!important;color:var(--hx-lemon)!important;border:1px solid #7B4A4A!important}
+.status-active,.status-inactive,.loading{color:var(--hx-lemon)!important}.footer{color:var(--hx-lemon)!important;opacity:.8}
+.login-box{border-top:6px solid var(--hx-lemon)!important}.login-box h1,h1{color:var(--hx-lemon)!important}
+/* Preserve dashboard/report layout rules */
+@media(min-width:768px){.container:has(#progressChart){display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:18px!important}.container:has(#progressChart)>.filters,.container:has(#progressChart)>.period-note,.container:has(#progressChart)>.kpis,.container:has(#progressChart)>.grid2{grid-column:1/-1!important}.container:has(#progressChart)>.card:nth-child(5){grid-column:1!important;grid-row:5!important}.container:has(#progressChart)>.card:nth-child(7){grid-column:2!important;grid-row:5!important}.container:has(#progressChart)>.card:nth-child(6){grid-column:1/-1!important;grid-row:6!important}}
+@media(max-width:767px){.container:has(#progressChart){display:grid!important;grid-template-columns:1fr!important;gap:18px!important}.container:has(#progressChart)>.card:nth-child(5){grid-column:1!important;grid-row:5!important}.container:has(#progressChart)>.card:nth-child(7){grid-column:1!important;grid-row:6!important}.container:has(#progressChart)>.card:nth-child(6){grid-column:1!important;grid-row:7!important}}
+.container:has(#productArea){display:block!important;width:100%!important}.container:has(#productArea)>.card{display:block!important;width:100%!important}.container:has(#cumulativeAchievementReport) .table-container{overflow-x:visible!important}.container:has(#cumulativeAchievementReport) table{width:100%!important;min-width:0!important;table-layout:fixed!important}.container:has(#cumulativeAchievementReport) th,.container:has(#cumulativeAchievementReport) td{white-space:normal!important;word-break:break-word!important;overflow-wrap:anywhere!important;padding:6px 5px!important;font-size:10px!important}
+/* Neutralize common inline light backgrounds */
+[style*="background:#fff"],[style*="background: #fff"],[style*="background:white"],[style*="background: white"]{background:var(--hx-surface)!important}
