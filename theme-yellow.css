@@ -1,8 +1,8 @@
-/* HEXADOX MIS — GREY + RICH LEMON YELLOW THEME */
+/* HEXADOX MIS — GREY + RICH YELLOW THEME */
 :root {
-  --hx-lemon:#E6FF00; --hx-lemon-bright:#F0FF33; --hx-lemon-dark:#B9CC00;
+  --hx-lemon:#FFC400; --hx-lemon-bright:#FFD633; --hx-lemon-dark:#D9A600;
   --hx-bg:#34373B; --hx-surface:#41454A; --hx-surface-2:#4A4E53; --hx-surface-3:#50555A;
-  --hx-charcoal:#24272A; --hx-text:#E6FF00; --hx-muted:#E6FF00; --hx-border:#686D72;
+  --hx-charcoal:#24272A; --hx-text:#FFC400; --hx-muted:#FFC400; --hx-border:#70757A;
   --hx-shadow:rgba(0,0,0,.32);
 }
 html,body{background:var(--hx-bg)!important;color:var(--hx-lemon)!important}
@@ -33,6 +33,7 @@ tr:nth-child(even) td{background:var(--hx-surface-3)!important}tr:hover td{backg
 .error{background:#4B3030!important;color:var(--hx-lemon)!important;border:1px solid #7B4A4A!important}
 .status-active,.status-inactive,.loading{color:var(--hx-lemon)!important}.footer{color:var(--hx-lemon)!important;opacity:.8}
 .login-box{border-top:6px solid var(--hx-lemon)!important}.login-box h1,h1{color:var(--hx-lemon)!important}
+/* Chart.js canvas text cannot be styled by CSS; dashboard.html sets Chart.defaults explicitly. */
 /* Preserve dashboard/report layout rules */
 @media(min-width:768px){.container:has(#progressChart){display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:18px!important}.container:has(#progressChart)>.filters,.container:has(#progressChart)>.period-note,.container:has(#progressChart)>.kpis,.container:has(#progressChart)>.grid2{grid-column:1/-1!important}.container:has(#progressChart)>.card:nth-child(5){grid-column:1!important;grid-row:5!important}.container:has(#progressChart)>.card:nth-child(7){grid-column:2!important;grid-row:5!important}.container:has(#progressChart)>.card:nth-child(6){grid-column:1/-1!important;grid-row:6!important}}
 @media(max-width:767px){.container:has(#progressChart){display:grid!important;grid-template-columns:1fr!important;gap:18px!important}.container:has(#progressChart)>.card:nth-child(5){grid-column:1!important;grid-row:5!important}.container:has(#progressChart)>.card:nth-child(7){grid-column:1!important;grid-row:6!important}.container:has(#progressChart)>.card:nth-child(6){grid-column:1!important;grid-row:7!important}}
