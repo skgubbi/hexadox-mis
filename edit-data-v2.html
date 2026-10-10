@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<meta name="cache-version" content="20260903-10"><title>Hexadox MIS - Edit Submitted Data</title>
-<link rel="stylesheet" href="theme-yellow.css?v=20260903-10">
+<meta name="cache-version" content="20261010-01"><title>Hexadox MIS - Edit Submitted Data</title>
+<link rel="stylesheet" href="theme-yellow.css?v=20261010-01">
 <style>
 *{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f4f6f6;color:#222}.header{background:#f4c400;color:#111;padding:18px 25px;display:flex;justify-content:space-between;align-items:center}.header h2{margin:0;font-size:22px}.btn{border:0;padding:10px 18px;border-radius:6px;cursor:pointer;font-weight:bold;background:#f4c400;color:#111}.btn:disabled{opacity:.6}.back{background:#fff}.container{max-width:1450px;margin:25px auto;padding:0 15px}.card{background:#fff;padding:22px;border-radius:10px;box-shadow:0 2px 10px #00000014;margin-bottom:20px}.toggle{display:flex;gap:10px;margin-bottom:20px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}label{display:block;font-weight:bold;margin-bottom:7px}select,input{width:100%;padding:10px;border:1px solid #ccc;border-radius:5px;font-size:15px}.info{background:#fff8d6;border-left:5px solid #f4c400;padding:12px 15px;margin-bottom:18px}.table-container{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:1450px}th{background:#f4c400;padding:11px 8px;text-align:center}td{padding:8px;border-bottom:1px solid #ddd;text-align:center}td.product{text-align:left;font-weight:500}.value{font-weight:bold;text-align:right}.message{margin-top:15px;padding:12px;border-radius:5px;text-align:center;font-weight:bold}.success{background:#d9f5e9;color:#146c43}.error{background:#f8d7da;color:#842029}.loading{text-align:center;padding:25px;font-weight:bold}.hidden{display:none!important}.changed{background:#fff3bf!important}.addbar{display:flex;gap:10px;margin-bottom:15px}.addbar select{max-width:450px}.remove{background:#f8d7da;color:#842029;border:1px solid #e3a6ad;padding:7px 10px;border-radius:5px;cursor:pointer}@media(max-width:850px){.grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:550px){.grid{grid-template-columns:1fr}.toggle,.addbar{flex-direction:column}.header h2{font-size:18px}}
 </style></head>
@@ -27,7 +27,7 @@ const $=id=>document.getElementById(id);
 const esc=x=>{const d=document.createElement('div');d.textContent=x??'';return d.innerHTML};
 const money=x=>Number(x||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
 function msg(t,c){const e=$('message');e.textContent=t;e.className='message '+c;e.classList.remove('hidden')}
-function goHome(){location.href='home.html?v=20260903-10'}
+function goHome(){location.href='home.html?v=20261010-01'}
 function years(){const s=$('year'),y=new Date().getFullYear();for(let n=y-2;n<=y+1;n++)s.appendChild(new Option(n,n))}
 async function init(){client=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true}});const q=await client.auth.getSession();if(q.error)throw q.error;if(!q.data.session){location.href='index.html';return}years();const d=new Date();$('month').value=d.getMonth()+1;$('year').value=d.getFullYear();await hqs();setMode('sales')}
 async function hqs(){const q=await client.from('hqs').select('id,hq_name').eq('active',true).order('hq_name');if(q.error)throw q.error;$('hq').innerHTML='<option value="">Select HQ</option>';(q.data||[]).forEach(x=>$('hq').appendChild(new Option(x.hq_name,x.id)))}
