@@ -185,8 +185,9 @@
 
         .price-controls {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: minmax(180px,1fr) minmax(240px,1fr) auto;
             gap: 18px;
+            align-items: end;
             margin-bottom: 20px;
         }
 
@@ -237,6 +238,7 @@
 
 
         @media (max-width: 700px) {
+            .price-controls { grid-template-columns: 1fr; }
 
             .header h2 {
                 font-size: 18px;
@@ -272,6 +274,19 @@
 
 
 <div class="container">
+
+    <div class="card" id="monthly-pts">
+        <h3>Monthly PTS Master</h3>
+        <div class="price-master-note">Enter the PTS for every product for the selected month. Use carry forward to copy the previous month’s PTS, then review and save. This price master covers April 2026 to March 2027.</div>
+        <div class="price-controls">
+            <div><label for="priceMonth">Month</label><select id="priceMonth"></select></div>
+            <div><label>Carry Forward</label><button type="button" id="carryForwardButton" class="price-save-button" onclick="carryForwardPrices()">CARRY FORWARD PREVIOUS MONTH</button></div>
+            <div><label>&nbsp;</label><button type="button" id="savePricesButton" class="price-save-button save-monthly-pts" onclick="saveMonthlyPrices()">SAVE PTS FOR ALL PRODUCTS</button></div>
+        </div>
+        <div id="priceMessage" class="message"></div>
+        <div id="monthlyPriceArea"><div class="loading">Loading monthly PTS...</div></div>
+        <div class="save-area"><button type="button" id="savePricesButtonBottom" class="save-button save-monthly-pts" onclick="saveMonthlyPrices()">SAVE PTS FOR ALL PRODUCTS</button></div>
+    </div>
 
 
     <!-- ==========================================
@@ -324,17 +339,7 @@
 
 
 
-    <div class="card" id="monthly-pts">
-        <h3>Monthly PTS Master</h3>
-        <div class="price-master-note">Enter the PTS for every product for the selected month. Use carry forward to copy the previous month’s PTS, then review and save. This price master covers April 2026 to March 2027.</div>
-        <div class="price-controls">
-            <div><label for="priceMonth">Month</label><select id="priceMonth"></select></div>
-            <div><label>Carry Forward</label><button type="button" id="carryForwardButton" class="price-save-button" onclick="carryForwardPrices()">CARRY FORWARD PREVIOUS MONTH</button></div>
-        </div>
-        <div id="priceMessage" class="message"></div>
-        <div id="monthlyPriceArea"><div class="loading">Loading monthly PTS...</div></div>
-        <div class="save-area"><button type="button" id="savePricesButton" class="save-button" onclick="saveMonthlyPrices()">SAVE MONTHLY PTS</button></div>
-    </div>
+
 
     <!-- ==========================================
          PRODUCT LIST
@@ -695,9 +700,8 @@ async function saveMonthlyPrices() {
         values.push({id:input.dataset.productId,value});
     }
     const selected = selectedPriceMonth();
-    const button = document.getElementById("savePricesButton");
-    button.disabled = true;
-    button.textContent = "SAVING...";
+    const buttons = [...document.querySelectorAll(".save-monthly-pts")];
+    buttons.forEach(button => { button.disabled = true; button.textContent = "SAVING..."; });
     try {
         const results = await Promise.all(values.map(item => client.from("products").update({[selected.column]:item.value}).eq("id",item.id)));
         const errors = results.filter(result => result.error).map(result => result.error.message);
@@ -707,8 +711,7 @@ async function saveMonthlyPrices() {
     } catch (error) {
         showPriceMessage("Unable to save monthly PTS: " + error.message, "error");
     } finally {
-        button.disabled = false;
-        button.textContent = "SAVE MONTHLY PTS";
+        buttons.forEach(button => { button.disabled = false; button.textContent = "SAVE PTS FOR ALL PRODUCTS"; });
     }
 }
 
