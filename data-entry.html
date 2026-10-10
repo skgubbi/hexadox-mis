@@ -953,9 +953,13 @@ function productChanged(select) {
         return;
     }
 
-    // PTS is entered separately for each stockist submission.
-    // Product master prices are not copied into sales records.
-    row.querySelector(".pts").value = "";
+    // Default PTS from the selected month's Product Price Master.
+    // Keep it editable for transaction-specific adjustments.
+    const product = products.find(item => String(item.id) === String(selectedId));
+    const month = parseInt(document.getElementById("month").value);
+    const year = parseInt(document.getElementById("year").value);
+    const monthlyPrice = product ? getMonthlyPrice(product, month, year) : null;
+    row.querySelector(".pts").value = monthlyPrice === null || monthlyPrice === undefined || monthlyPrice === "" ? "" : Number(monthlyPrice).toFixed(2);
     calculateEntryRow(row);
 }
 
