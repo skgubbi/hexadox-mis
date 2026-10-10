@@ -884,6 +884,7 @@ function addProductRow() {
             <input
                 type="number"
                 class="free-units"
+                min="0"
                 step="1"
                 placeholder="0"
                 oninput="calculateEntryRow(this.closest('tr'))">
@@ -1040,7 +1041,7 @@ async function submitData() {
         const secondaryUnits = secondaryValue === "" ? 0 : Number(secondaryValue);
         if (!Number.isFinite(pts) || pts < 0) { showMessage("PTS must be a valid positive number.", "error"); row.querySelector(".pts").focus(); return; }
         if (!Number.isInteger(primaryUnits)) { showMessage("Primary Quantity must be a whole number.", "error"); row.querySelector(".primary").focus(); return; }
-        if (!Number.isInteger(freeUnits)) { showMessage("Free Units Reimbursement Units must be a whole number.", "error"); row.querySelector(".free-units").focus(); return; }
+        if (!Number.isInteger(freeUnits) || freeUnits < 0) { showMessage("Free Units Reimbursement Units must be a non-negative whole number.", "error"); row.querySelector(".free-units").focus(); return; }
         if (!Number.isInteger(secondaryUnits)) { showMessage("Secondary Quantity must be a whole number.", "error"); row.querySelector(".secondary").focus(); return; }
         details.push({product_id: productId, pts, primary_units: primaryUnits, primary_free_units: freeUnits, secondary_units: secondaryUnits});
     }
