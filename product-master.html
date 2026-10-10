@@ -323,6 +323,19 @@
 
 
 
+
+    <div class="card">
+        <h3>Monthly PTS Master</h3>
+        <div class="price-master-note">Enter the PTS for every product for the selected month. Use carry forward to copy the previous month’s PTS, then review and save. This price master covers April 2026 to March 2027.</div>
+        <div class="price-controls">
+            <div><label for="priceMonth">Month</label><select id="priceMonth"></select></div>
+            <div><label>Carry Forward</label><button type="button" id="carryForwardButton" class="price-save-button" onclick="carryForwardPrices()">CARRY FORWARD PREVIOUS MONTH</button></div>
+        </div>
+        <div id="priceMessage" class="message"></div>
+        <div id="monthlyPriceArea"><div class="loading">Loading monthly PTS...</div></div>
+        <div class="save-area"><button type="button" id="savePricesButton" class="save-button" onclick="saveMonthlyPrices()">SAVE MONTHLY PTS</button></div>
+    </div>
+
     <!-- ==========================================
          PRODUCT LIST
     =========================================== -->
@@ -383,7 +396,9 @@ async function initializePage() {
     }
 
 
+    setupMonthlyPts();
     await loadProducts();
+    await loadMonthlyPrices();
 
 }
 
@@ -569,6 +584,133 @@ async function loadProducts() {
 
 }
 
+
+
+// ======================================================
+// MONTHLY PTS MASTER
+// ======================================================
+
+const PRICE_MONTHS = [
+    {month:4,year:2026,label:"April 2026",column:"price_apr_2026"},
+    {month:5,year:2026,label:"May 2026",column:"price_may_2026"},
+    {month:6,year:2026,label:"June 2026",column:"price_jun_2026"},
+    {month:7,year:2026,label:"July 2026",column:"price_jul_2026"},
+    {month:8,year:2026,label:"August 2026",column:"price_aug_2026"},
+    {month:9,year:2026,label:"September 2026",column:"price_sep_2026"},
+    {month:10,year:2026,label:"October 2026",column:"price_oct_2026"},
+    {month:11,year:2026,label:"November 2026",column:"price_nov_2026"},
+    {month:12,year:2026,label:"December 2026",column:"price_dec_2026"},
+    {month:1,year:2027,label:"January 2027",column:"price_jan_2027"},
+    {month:2,year:2027,label:"February 2027",column:"price_feb_2027"},
+    {month:3,year:2027,label:"March 2027",column:"price_mar_2027"}
+];
+
+function setupMonthlyPts() {
+    const select = document.getElementById("priceMonth");
+    PRICE_MONTHS.forEach(item => select.appendChild(new Option(item.label, item.column)));
+    const now = new Date();
+    const current = PRICE_MONTHS.find(item => item.month === now.getMonth() + 1 && item.year === now.getFullYear());
+    select.value = current ? current.column : PRICE_MONTHS[0].column;
+    select.addEventListener("change", loadMonthlyPrices);
+    document.getElementById("carryForwardButton").disabled = select.selectedIndex === 0;
+}
+
+function selectedPriceMonth() {
+    return PRICE_MONTHS.find(item => item.column === document.getElementById("priceMonth").value) || PRICE_MONTHS[0];
+}
+
+async function loadMonthlyPrices() {
+    const area = document.getElementById("monthlyPriceArea");
+    const selected = selectedPriceMonth();
+    document.getElementById("carryForwardButton").disabled = document.getElementById("priceMonth").selectedIndex === 0;
+    area.innerHTML = '<div class="loading">Loading ' + selected.label + ' PTS...</div>';
+    const columns = PRICE_MONTHS.map(item => item.column).join(",");
+    const {data, error} = await client.from("products").select("id,product_name,active," + columns).order("product_name");
+    if (error) {
+        area.innerHTML = '<div class="message error" style="display:block;">Unable to load monthly PTS: ' + escapeHTML(error.message) + '</div>';
+        return;
+    }
+    if (!data || data.length === 0) {
+        area.innerHTML = '<div class="loading">No products found.</div>';
+        return;
+    }
+    let html = '<div class="table-container"><table class="price-table"><thead><tr><th>Product Name</th><th>Status</th><th>PTS (₹)</th></tr></thead><tbody>';
+    data.forEach(product => {
+        const value = product[selected.column] === null || product[selected.column] === undefined ? "" : product[selected.column];
+        html += '<tr><td>' + escapeHTML(product.product_name) + '</td><td class="' + (product.active ? "status-active" : "status-inactive") + '">' + (product.active ? "ACTIVE" : "INACTIVE") + '</td><td><input class="price-input" type="number" min="0" step="0.01" data-product-id="' + escapeHTML(product.id) + '" value="' + escapeHTML(value) + '" aria-label="PTS for ' + escapeHTML(product.product_name) + '"></td></tr>';
+    });
+    html += '</tbody></table></div>';
+    area.innerHTML = html;
+}
+
+async function carryForwardPrices() {
+    const index = document.getElementById("priceMonth").selectedIndex;
+    if (index <= 0) {
+        showPriceMessage("There is no earlier month in this price master to carry forward.", "error");
+        return;
+    }
+    const current = PRICE_MONTHS[index];
+    const previous = PRICE_MONTHS[index - 1];
+    const button = document.getElementById("carryForwardButton");
+    button.disabled = true;
+    try {
+        const columns = PRICE_MONTHS.map(item => item.column).join(",");
+        const {data, error} = await client.from("products").select("id," + columns).order("product_name");
+        if (error) throw error;
+        const values = new Map((data || []).map(product => [String(product.id), product[previous.column]]));
+        document.querySelectorAll("#monthlyPriceArea .price-input").forEach(input => {
+            const value = values.get(String(input.dataset.productId));
+            input.value = value === null || value === undefined ? "" : value;
+        });
+        showPriceMessage("Copied " + previous.label + " PTS into " + current.label + ". Review the values and save.", "success");
+    } catch (error) {
+        showPriceMessage("Unable to carry forward PTS: " + error.message, "error");
+    } finally {
+        button.disabled = index <= 0;
+    }
+}
+
+function showPriceMessage(text, type) {
+    const message = document.getElementById("priceMessage");
+    message.textContent = text;
+    message.className = "message " + type;
+    message.style.display = "block";
+}
+
+async function saveMonthlyPrices() {
+    const inputs = [...document.querySelectorAll("#monthlyPriceArea .price-input")];
+    if (!inputs.length) {
+        showPriceMessage("Load the products before saving.", "error");
+        return;
+    }
+    const values = [];
+    for (const input of inputs) {
+        const raw = input.value.trim();
+        const value = raw === "" ? null : Number(raw);
+        if (value !== null && (!Number.isFinite(value) || value < 0)) {
+            showPriceMessage("PTS values must be blank or non-negative numbers.", "error");
+            input.focus();
+            return;
+        }
+        values.push({id:input.dataset.productId,value});
+    }
+    const selected = selectedPriceMonth();
+    const button = document.getElementById("savePricesButton");
+    button.disabled = true;
+    button.textContent = "SAVING...";
+    try {
+        const results = await Promise.all(values.map(item => client.from("products").update({[selected.column]:item.value}).eq("id",item.id)));
+        const errors = results.filter(result => result.error).map(result => result.error.message);
+        if (errors.length) throw new Error(errors.length + " product price(s) could not be saved. " + errors.slice(0,3).join("; "));
+        showPriceMessage(selected.label + " PTS saved for " + values.length + " products.", "success");
+        await loadMonthlyPrices();
+    } catch (error) {
+        showPriceMessage("Unable to save monthly PTS: " + error.message, "error");
+    } finally {
+        button.disabled = false;
+        button.textContent = "SAVE MONTHLY PTS";
+    }
+}
 
 
 // ======================================================
